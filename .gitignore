@@ -20,6 +20,14 @@ wheels/
 *.egg
 MANIFEST
 
+<<<<<<< HEAD
+=======
+# Python execution junk
+*.pyc
+__pycache__/
+.mypy_cache/
+
+>>>>>>> 706437c (bookkeeping)
 # Unit test / coverage reports
 htmlcov/
 .tox/
@@ -35,6 +43,12 @@ coverage.xml
 # Jupyter Notebook
 .ipynb_checkpoints
 
+<<<<<<< HEAD
+=======
+# results
+checkpoints/
+
+>>>>>>> 706437c (bookkeeping)
 # Environments
 .env
 .venv
@@ -42,4 +56,12 @@ env/
 venv/
 ENV/
 env.bak/
+<<<<<<< HEAD
 venv.bak/
+=======
+venv.bak/
+
+# IDE
+.idea/
+.DS_Store
+>>>>>>> 706437c (bookkeeping)
