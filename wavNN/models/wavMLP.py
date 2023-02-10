@@ -41,15 +41,16 @@ class WavMLP(nn.Module):
 
         in_channels = linear_in_size(level, in_channels)
 
+        self.flatten_wavelet = nn.Flatten(start_dim=1, end_dim=-1)
         # Channels for each of the 3 channels of the wavelet (Not including the downscaled original
-        self.channel_1_mlp = nn.Linear(in_channels, hidden_size)
-        self.channel_2_mlp = nn.Linear(in_channels, hidden_size)
-        self.channel_3_mlp = nn.Linear(in_channels, hidden_size)
+        self.channel_1_mlp = nn.Linear(in_channels**2, hidden_size)
+        self.channel_2_mlp = nn.Linear(in_channels**2, hidden_size)
+        self.channel_3_mlp = nn.Linear(in_channels**2, hidden_size)
 
         # Flatten for when these are stacked
-        self.flatten = nn.Flatten()
+        self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
 
-        # Output of those tied 3 channel layers
+        # Output of those tied 3 channel layers, and the flattened concat of those
         self.output = nn.Linear(hidden_size * 3, out_channels)
         # Activation for a classifier
         self.tail = nn.Softmax(0) if tail else None
@@ -59,9 +60,10 @@ class WavMLP(nn.Module):
         # Wavelet at level L
         x = self.wavelet(x)
         # An MLP for each of the transformed levels
-        channel_1 = self.channel_1_mlp(x[0])
-        channel_2 = self.channel_2_mlp(x[1])
-        channel_3 = self.channel_3_mlp(x[2])
+
+        channel_1 = self.channel_1_mlp(self.flatten_wavelet(x[0]))
+        channel_2 = self.channel_2_mlp(self.flatten_wavelet(x[1]))
+        channel_3 = self.channel_3_mlp(self.flatten_wavelet(x[2]))
         # stack the outputs
         concat = torch.stack([channel_1, channel_2, channel_3], dim=1)
         # Flatten for the output dense
