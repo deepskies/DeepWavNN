@@ -1,11 +1,14 @@
 from torch.utils.data import DataLoader, Subset
+from torchvision.transforms import ToTensor
 from torchvision.datasets import MNIST
 import numpy as np
 
 
 class NMISTGenerator:
     def __init__(self):
-        self.dataset = MNIST(root="./mnist", download=True)
+        self.dataset = MNIST(
+            root="./data/mnist", download=True, train=True, transform=ToTensor()
+        )
 
     def __call__(self, *args, **kwargs):
         sample_size = kwargs["sample_size"]

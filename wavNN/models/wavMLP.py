@@ -12,6 +12,7 @@ class WavMLP(nn.Module):
         out_channels: int,
         level: int,
         tail=False,
+        vanilla=False,
     ):
         """
         Simplest version is an MLP that takes a single layer of the wavelet
@@ -24,6 +25,8 @@ class WavMLP(nn.Module):
         """
         super().__init__()
         assert level != 0, "Level 0 wavelet not supported"
+
+        self.vanilla = vanilla
 
         def linear_in_size(level, in_channels):
             ddim, aa = in_channels, []
@@ -39,14 +42,17 @@ class WavMLP(nn.Module):
         # Wavelet transform of input x at a level as defined by the user
         self.wavelet = lambda x: torch.Tensor(pywt.wavedec2(x, "db1")[level])
 
-        in_channels = linear_in_size(level, in_channels)
+        wav_in_channels = linear_in_size(level, in_channels)
 
         self.flatten_wavelet = nn.Flatten(start_dim=1, end_dim=-1)
         # Channels for each of the 3 channels of the wavelet (Not including the downscaled original
-        self.channel_1_mlp = nn.Linear(in_channels**2, hidden_size)
-        self.channel_2_mlp = nn.Linear(in_channels**2, hidden_size)
-        self.channel_3_mlp = nn.Linear(in_channels**2, hidden_size)
+        self.channel_1_mlp = nn.Linear(wav_in_channels**2, hidden_size)
+        self.channel_2_mlp = nn.Linear(wav_in_channels**2, hidden_size)
+        self.channel_3_mlp = nn.Linear(wav_in_channels**2, hidden_size)
 
+        if self.vanilla:
+            self.vanilla_connection = nn.Linear(in_channels**2, hidden_size)
+            self.vanilla_output = nn.Linear(hidden_size, out_channels)
         # Flatten for when these are stacked
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
 
@@ -57,19 +63,23 @@ class WavMLP(nn.Module):
 
     def forward(self, x):
         # forward pass through the network
-        # Wavelet at level L
-        x = self.wavelet(x)
-        # An MLP for each of the transformed levels
+        if not self.vanilla:
+            # Wavelet at level L
+            x = self.wavelet(x)
+            # An MLP for each of the transformed levels
+            channel_1 = self.channel_1_mlp(self.flatten_wavelet(x[0]))
+            channel_2 = self.channel_2_mlp(self.flatten_wavelet(x[1]))
+            channel_3 = self.channel_3_mlp(self.flatten_wavelet(x[2]))
+            # stack the outputs
+            concat = torch.stack([channel_1, channel_2, channel_3], dim=1)
+            # Flatten for the output dense
+            x = self.flatten(concat)
+            x = self.output(x)
 
-        channel_1 = self.channel_1_mlp(self.flatten_wavelet(x[0]))
-        channel_2 = self.channel_2_mlp(self.flatten_wavelet(x[1]))
-        channel_3 = self.channel_3_mlp(self.flatten_wavelet(x[2]))
-        # stack the outputs
-        concat = torch.stack([channel_1, channel_2, channel_3], dim=1)
-        # Flatten for the output dense
-        x = self.flatten(concat)
-
-        x = self.output(x)
+        else:
+            x = self.flatten(x)
+            x = self.vanilla_connection(x)
+            x = self.vanilla_output(x)
 
         if self.tail is not None:
             x = self.tail(x)
@@ -107,7 +117,4 @@ if __name__ == "__main__":
 
     model = WavMLP(in_channels=28, out_channels=2, hidden_size=2, level=1)
 
-    def get_output_shape(model, image_dim):
-        return model(torch.rand(*(image_dim))).data.shape
-
-    print(get_output_shape(model, (28, 28)))
+    print(model(torch.rand(*(1, 28, 28))).data.shape)
