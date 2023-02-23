@@ -36,20 +36,22 @@ class TrainingLoop:
 
             model_prediction = self.model(data_input)
             loss = self.loss(model_prediction, label)
+            accuracy = ""
             loss.backward()
             self.optimizer.step()
             running_loss += loss
 
         loss = running_loss / (i + 1)
-        return loss.item()
+        return loss.item(), accuracy
 
     def train(self, plot=False):
         for epoch in range(self.epochs):
-            train_loss = self.train_one_epoch()
+            train_loss, train_accuracy = self.train_one_epoch()
             val_loss = self.validate()
 
             self.history["train_loss"].append(train_loss)
             self.history["val_loss"].append(val_loss)
+            self.history["train_accuracy"].append(train_accuracy)
 
         if plot:
             self.plot_history()
