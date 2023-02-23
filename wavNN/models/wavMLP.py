@@ -88,15 +88,55 @@ class WavMLP(nn.Module):
 
 
 class VotingWavMLP(nn.Module):
-    def __init__(self):
+    def __init__(self, input_size, hidden_sizes, out_size, voting_method="soft"):
         super().__init__()
 
-        # Slightly more complicated version of the WavMLP
-        # Builds multiple single transform wavelet networks
-        # And builds them into a non-tied voting classifier
+        assert voting_method in ["hard", "soft"]
 
-    def forward(self):
-        pass
+        self.voting_method = voting_method
+        possible_levels = []
+        hidden_sizes = (
+            hidden_sizes
+            if type(hidden_sizes) == list
+            else [hidden_sizes for _ in range(len(possible_levels))]
+        )
+
+        if len(possible_levels) != len(hidden_sizes):
+            Warning(
+                "Passed hidden layer sizes and number of levels for the input does match"
+            )
+
+        self.models = [
+            WavMLP(
+                in_channels=input_size,
+                hidden_size=hidden_size,
+                out_channels=out_size,
+                level=level,
+                tail=False,
+            )
+            for hidden_size, level in zip(possible_levels, hidden_sizes)
+        ]
+
+    @staticmethod
+    def soft_voting(probabilities):
+        # Take the average, then the max
+        probabilities_sum = sum(probabilities) / len(probabilities)
+        return nn.Softmax(probabilities_sum)
+
+    @staticmethod
+    def hard_voting(probabilities):
+        # Take the max of the max.
+        votes = [nn.Softmax(prob) for prob in probabilities]
+        return nn.Softmax(votes)
+
+    def vote(self, probabilities):
+        return {"hard": VotingWavMLP.hard_voting, "soft": VotingWavMLP.soft_voting}[
+            self.voting_method
+        ](probabilities)
+
+    def forward(self, x):
+        outputs = [model(x) for model in self.models]
+        return self.vote(outputs)
 
 
 class TiedWavMLP(nn.Module):
