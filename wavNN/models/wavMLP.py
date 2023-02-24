@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import pywt
 import numpy as np
-from utils import voting
+from wavNN.utils import voting
 
 
 class VanillaMLP(nn.Module):
@@ -14,7 +14,7 @@ class VanillaMLP(nn.Module):
         self.output_layer = nn.Linear(hidden_size, out_channels)
 
         if tail:
-            self.tail = nn.Softmax()
+            self.tail = nn.Softmax(dim=0)
 
     def forward(self, x):
         x = self.flatten_input(x)
@@ -77,7 +77,8 @@ class WavMLP(nn.Module):
         self.output = nn.Linear(hidden_size * 3, out_channels)
 
         # Activation for a classifier
-        self.tail = nn.Softmax(0) if tail else None
+        if tail:
+            self.tail = nn.Softmax(dim=0)
 
     def forward(self, x):
         # forward pass through the network
@@ -93,13 +94,13 @@ class WavMLP(nn.Module):
         x = self.flatten(concat)
         x = self.output(x)
 
-        if self.tail is not None:
+        if hasattr(self, "tail"):
             x = self.tail(x)
 
         return x
 
 
-class VotingSingleWavMLP(nn.Module, WavMLP):
+class VotingSingleWavMLP(WavMLP):
     def __init__(
         self,
         in_channels: int,
@@ -109,10 +110,7 @@ class VotingSingleWavMLP(nn.Module, WavMLP):
         voting_method: str = "hard",
     ):
 
-        super(nn.Module).__init__()
-        super(WavMLP).__init__(
-            in_channels, hidden_size, out_channels, level, tail=False
-        )
+        super().__init__(in_channels, hidden_size, out_channels, level, tail=False)
 
         self.vote = {"hard": voting.hard_voting, "soft": voting.soft_voting}[
             voting_method

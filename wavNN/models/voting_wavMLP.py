@@ -1,7 +1,7 @@
 import numpy as np
 from torch import nn
-from wavMLP import WavMLP
-from utils import voting
+from wavNN.models.wavMLP import WavMLP
+from wavNN.utils import voting
 
 
 class VotingMultiWavMLP(nn.Module):
