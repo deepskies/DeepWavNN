@@ -17,9 +17,12 @@ class VotingMultiWavMLP(nn.Module):
 
         def calc_possible_level(input_size):
             ddim, levels = input_size, []
-            while ddim >= 2:
+            level = 0
+            while ddim > 2:
                 ddim = int(np.rint(ddim / 2))
-                levels.append(ddim)
+                levels.append(level)
+                level += 1
+            levels = [level for level in levels if level != 0]
             return levels
 
         possible_levels = calc_possible_level(in_channels)
@@ -42,8 +45,11 @@ class VotingMultiWavMLP(nn.Module):
                 level=level,
                 tail=False,
             )
-            for hidden_size, level in zip(possible_levels, hidden_sizes)
+            for hidden_size, level in zip(hidden_sizes, possible_levels)
         ]
+        self.tail_output = nn.Linear(
+            in_features=out_channels, out_features=out_channels
+        )
 
     def vote(self, probabilities):
         return {"hard": voting.hard_voting, "soft": voting.soft_voting}[
@@ -51,10 +57,14 @@ class VotingMultiWavMLP(nn.Module):
         ](probabilities)
 
     def forward(self, x):
-        outputs = [model(x) for model in self.models]
-        voted_prediction = self.vote(outputs)
+        outputs = [model.forward(x) for model in self.models]
+        x = self.vote(outputs)
 
-        return voted_prediction
+        if self.tail:
+            x = self.tail_output(x)
+            x = nn.Softmax(dim=0)(x)
+
+        return x
 
 
 class TiedWavMLP(nn.Module):
