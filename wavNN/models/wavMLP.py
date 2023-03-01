@@ -56,7 +56,7 @@ class WavMLP(nn.Module):
                 if ddim == 2:
                     aa.append(0)
             aa.reverse()
-            assert len(aa) > level
+            assert len(aa) >= level
             return aa[level]
 
         # Wavelet transform of input x at a level as defined by the user
