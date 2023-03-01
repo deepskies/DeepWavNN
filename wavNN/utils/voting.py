@@ -1,13 +1,15 @@
 from torch import nn
+from torch import tensor, stack
 
 
 def soft_voting(probabilities):
-    # Take the average, then the max
-    probabilities_sum = sum(probabilities) / len(probabilities)
-    return nn.Softmax(probabilities_sum)
+    # Take the average
+    votes = sum(probabilities) / len(probabilities)
+    return votes
 
 
 def hard_voting(probabilities):
-    # Take the max of the max.
-    votes = [nn.Softmax(prob) for prob in probabilities]
-    return nn.Softmax(votes)
+    # Take the max
+    probabilities = stack(probabilities).mT
+    votes = nn.functional.softmax(probabilities, dim=0)
+    return votes

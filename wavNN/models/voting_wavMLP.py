@@ -1,24 +1,28 @@
 import numpy as np
 from torch import nn
+import torch
 from wavNN.models.wavMLP import WavMLP
 from wavNN.utils import voting
 
 
 class VotingMultiWavMLP(nn.Module):
-    def __init__(self, input_size, hidden_sizes, out_size, voting_method="soft"):
+    def __init__(
+        self, in_channels, hidden_sizes, out_channels, voting_method="soft", tail=False
+    ):
         super().__init__()
 
         assert voting_method in ["hard", "soft"]
         self.voting_method = voting_method
+        self.tail = tail
 
         def calc_possible_level(input_size):
             ddim, levels = input_size, []
-            while ddim > 2:
+            while ddim >= 2:
                 ddim = int(np.rint(ddim / 2))
                 levels.append(ddim)
             return levels
 
-        possible_levels = calc_possible_level(input_size)
+        possible_levels = calc_possible_level(in_channels)
         hidden_sizes = (
             hidden_sizes
             if type(hidden_sizes) == list
@@ -32,9 +36,9 @@ class VotingMultiWavMLP(nn.Module):
 
         self.models = [
             WavMLP(
-                in_channels=input_size,
+                in_channels=in_channels,
                 hidden_size=hidden_size,
-                out_channels=out_size,
+                out_channels=out_channels,
                 level=level,
                 tail=False,
             )
@@ -48,7 +52,9 @@ class VotingMultiWavMLP(nn.Module):
 
     def forward(self, x):
         outputs = [model(x) for model in self.models]
-        return self.vote(outputs)
+        voted_prediction = self.vote(outputs)
+
+        return voted_prediction
 
 
 class TiedWavMLP(nn.Module):
