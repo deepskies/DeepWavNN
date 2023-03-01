@@ -11,7 +11,14 @@ import torch
 
 class TrainingLoop:
     def __init__(
-        self, model_class, model_params, data_class, data_params, **training_configs
+        self,
+        model_class,
+        model_params,
+        data_class,
+        data_params,
+        optimizer_class,
+        optimizer_config,
+        **training_configs,
     ):
 
         self.model = model_class(**model_params)
@@ -19,10 +26,21 @@ class TrainingLoop:
 
         # Todo lr and momentum params
         self.loss = training_configs["loss"]()
-        self.optimizer = training_configs["optimizer"](
-            self.model.parameters(), lr=0.001, momentum=0.9
-        )
         self.epochs = training_configs["epochs"]
+
+        if "tied_model" in training_configs:
+            from itertools import chain
+
+            self.optimizer = optimizer_class(
+                chain(*[model.parameters() for model in self.model.models]),
+                lr=optimizer_config["lr"],
+                momentum=optimizer_config["momentum"],
+            )
+        else:
+            self.optimizer = optimizer_config(
+                self.model.parameters(), **optimizer_config
+            )
+
         self.history = {
             "train_loss": [],
             "val_loss": [],
@@ -127,33 +145,3 @@ class TrainingLoop:
 
         if save:
             self.save(save_path)
-
-
-if __name__ == "__main__":
-    from models.wavMLP import *
-    from data.nmist_generator import *
-
-    model_params = {
-        "in_channels": 28,
-        "hidden_size": 256,
-        "out_channels": 10,
-        "level": 2,
-        "vanilla": False,
-        "tail": True,
-    }
-
-    data_params = {"sample_size": [4000, 2000, 2000], "split": True}
-
-    training = TrainingLoop(
-        model_class=WavMLP,
-        model_params=model_params,
-        data_class=NMISTGenerator,
-        data_params=data_params,
-        optimizer=torch.optim.SGD,
-        loss=torch.nn.CrossEntropyLoss,
-        epochs=80,
-    )
-
-    training()
-
-    training.save("../results/test_baseline")
