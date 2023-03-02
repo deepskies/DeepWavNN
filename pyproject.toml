@@ -1,14 +1,4 @@
 [tool.poetry]
-<<<<<<< HEAD
-name = "deeptemplate-science"
-version = "0.1.0"
-description = "a template for a science motivated project, focus on ease of reproducablity"
-authors = ["voetberg <magpie127@gmail.com>"]
-license = "MIT"
-
-[tool.poetry.dependencies]
-python = "^3.9"
-=======
 name = "wavnn"
 version = "0.1.0"
 description = ""
@@ -23,17 +13,10 @@ argparse = "^1.4.0"
 pytest = "^7.2.1"
 pytest-cov = "^4.0.0"
 pre-commit = "^3.0.4"
-<<<<<<< HEAD
->>>>>>> b34ac92 (init)
-=======
 pandas = "^1.5.3"
 matplotlib = "^3.6.3"
 torchvision = "^0.14.1"
-<<<<<<< HEAD
->>>>>>> 8fe35a6 (Env update with torchvision)
-=======
 jupyter = "^1.0.0"
->>>>>>> e90b3c2 (Added jupyter notebooks)
 
 [tool.poetry.dev-dependencies]
 
