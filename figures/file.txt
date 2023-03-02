@@ -1,0 +1,1 @@
+Include diagrams and all figures included in the paper, along with any examples of results.
