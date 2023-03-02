@@ -46,6 +46,7 @@ class VotingMultiWavMLP(nn.Module):
                 tail=False,
             )
             for hidden_size, level in zip(hidden_sizes, possible_levels)
+            # TODO Add the 0th level network
         ]
         self.tail_output = nn.Linear(
             in_features=out_channels, out_features=out_channels
