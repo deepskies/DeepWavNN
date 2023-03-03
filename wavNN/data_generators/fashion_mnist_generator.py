@@ -1,11 +1,11 @@
 from data_generator import DataGenerator
 from torchvision.transforms import ToTensor
-from torchvision.datasets import MNIST
+from torchvision.datasets import FashionMNIST
 
 
 class NMISTGenerator(DataGenerator):
     def __init__(self):
-        dataset = MNIST(
-            root="./data/mnist", download=True, train=True, transform=ToTensor()
+        dataset = FashionMNIST(
+            root="./data/fashionmnist", download=True, train=True, transform=ToTensor()
         )
         super().__init__(dataset=dataset)
