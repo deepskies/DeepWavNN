@@ -33,9 +33,10 @@ class VotingMultiWavMLP(nn.Module):
         )
 
         if len(possible_levels) != len(hidden_sizes):
-            Warning(
-                "Passed hidden layer sizes and number of levels for the input does match"
+            raise AssertionError(
+                f"Passed hidden layer sizes and number of levels for the input does match, (requires, {hidden_sizes} hidden sizes to match {possible_levels} Levels)"
             )
+        self.n_levels = len(possible_levels)
 
         self.models = [
             WavMLP(
@@ -62,20 +63,9 @@ class VotingMultiWavMLP(nn.Module):
         x = self.vote(outputs)
 
         if self.tail:
-            x = self.tail_output(x)
+            if not self.voting_method == "hard":
+                x = self.tail_output(x)
+
             x = nn.Softmax(dim=0)(x)
 
         return x
-
-
-class TiedWavMLP(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-        # Slightly more complicated WavMLP
-        # Instead to just voting
-        # It ties all the outputs of the
-        # multiple networks into a dense output
-
-    def forward(self):
-        pass
