@@ -3,6 +3,7 @@ import torch.nn as nn
 import pywt
 import numpy as np
 from wavNN.utils import voting
+from wavNN.utils import levels
 
 
 class VanillaMLP(nn.Module):
@@ -48,21 +49,10 @@ class WavMLP(nn.Module):
         super().__init__()
         assert level != 0, "Level 0 wavelet not supported"
 
-        def linear_in_size(level, in_channels):
-            ddim, aa = in_channels, []
-            while ddim > 2:
-                ddim = int(np.rint(ddim / 2))
-                aa.append(ddim)
-                if ddim == 2:
-                    aa.append(0)
-            aa.reverse()
-            assert len(aa) >= level
-            return aa[level]
-
         # Wavelet transform of input x at a level as defined by the user
         self.wavelet = lambda x: torch.Tensor(pywt.wavedec2(x, "db1")[level])
 
-        wav_in_channels = linear_in_size(level, in_channels)
+        wav_in_channels = levels.find_output_size(level, in_channels)
 
         self.flatten_wavelet = nn.Flatten(start_dim=1, end_dim=-1)
         # Channels for each of the 3 channels of the wavelet (Not including the downscaled original

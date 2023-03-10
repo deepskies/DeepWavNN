@@ -49,7 +49,7 @@ def test_out_size_hard_voting_larger_network():
 def test_voting_multiple_size_networks():
     in_channels = 28
     out_channels = 10
-    hidden_size = [64, 128, 256]
+    hidden_size = [64, 128, 256, 512]
     voting_method = "hard"
     wavmlp = voting_wavMLP.VotingMultiWavMLP(
         in_channels=in_channels,
