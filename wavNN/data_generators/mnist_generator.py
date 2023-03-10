@@ -1,4 +1,4 @@
-from data_generator import DataGenerator
+from wavNN.data_generators.data_generator import DataGenerator
 from torchvision.transforms import ToTensor
 from torchvision.datasets import MNIST
 

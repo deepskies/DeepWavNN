@@ -8,7 +8,10 @@ class DataGenerator:
 
     def __call__(self, *args, **kwargs):
         sample_size = kwargs["sample_size"]
-        split = kwargs["split"]
+        split = False if not "split" in kwargs else kwargs["split"]
+        if type(sample_size) == list:
+            split = True
+
         batch_size = 64 if "batch_size" not in kwargs else kwargs["batch_size"]
         shuffle = False if "shuffle" not in kwargs else kwargs["shuffle"]
 

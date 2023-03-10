@@ -1,4 +1,4 @@
-from wavNN.data.nmist_generator import NMISTGenerator
+from wavNN.data_generators.mnist_generator import NMISTGenerator
 import pytest
 
 
