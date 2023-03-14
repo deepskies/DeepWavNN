@@ -40,10 +40,7 @@ def test_multibatch():
         stride_distance=stride_distance,
         tail=tail,
     )
-    assert (
-        network(torch.rand(*(64, in_channels, in_channels))).data.shape[1]
-        == out_channels
-    )
+    assert network(torch.rand(*(64, in_channels, in_channels))).data.shape[0] == 64
 
 
 def test_output_no_tail():
@@ -53,7 +50,7 @@ def test_output_no_tail():
     level = 1
     kernel_size = 4
     stride_distance = 2
-    tail = True
+    tail = False
     network = WavCNN(
         in_channels=in_channels,
         out_channels=out_channels,
@@ -66,12 +63,13 @@ def test_output_no_tail():
         network(torch.rand(*(1, in_channels, in_channels))).data.shape[1]
         == out_channels
     )
+    assert not hasattr(network, "tail")
 
 
 def test_allowed_input_levels():
-    kernel_sizes = []
+    kernel_sizes = [1, 2]
     allowed_levels = [1, 2, 3, 4]
-    for level, kernel_size in (allowed_levels, kernel_sizes):
+    for level, kernel_size in zip(allowed_levels, kernel_sizes):
         in_channels = 28
         out_channels = 1
         stride_distance = 2
@@ -91,9 +89,9 @@ def test_allowed_input_levels():
 
 
 def test_allowed_strides():
-    stride_sizes = []
+    stride_sizes = [1, 2]
     allowed_levels = [1, 2, 3, 4]
-    for level, kernel_size in (allowed_levels, stride_sizes):
+    for level, kernel_size in zip(allowed_levels, stride_sizes):
         in_channels = 28
         out_channels = 1
         kernel_size = 4
@@ -116,7 +114,7 @@ def test_allowed_strides():
 def test_forbidden_input_combos():
     kernel_sizes = [45969, 4304, 2312, 12]
     allowed_levels = [1, 2, 3, 4]
-    for level, kernel_size in (allowed_levels, kernel_sizes):
+    for level, kernel_size in zip(allowed_levels, kernel_sizes):
         in_channels = 28
         out_channels = 1
         stride_distance = 2
@@ -135,7 +133,7 @@ def test_forbidden_input_combos():
 def test_forbidden_strides():
     stride_sizes = [45969, 4304, 2312, 12]
     allowed_levels = [1, 2, 3, 4]
-    for level, stride_distance in (allowed_levels, stride_sizes):
+    for level, stride_distance in zip(allowed_levels, stride_sizes):
         in_channels = 28
         out_channels = 1
         kernel_size = 4
@@ -149,3 +147,23 @@ def test_forbidden_strides():
                 stride_distance=stride_distance,
                 tail=tail,
             )
+
+
+def test_pooling():
+    stride_distance = 2
+    level = 2
+    in_channels = 28
+    out_channels = 1
+    kernel_size = 4
+    tail = True
+    pool = True
+    wavcnn = WavCNN(
+        in_channels=in_channels,
+        out_channels=out_channels,
+        level=level,
+        kernel_size=kernel_size,
+        stride_distance=stride_distance,
+        tail=tail,
+        pool=pool,
+    )
+    assert hasattr(wavcnn, "pool")
