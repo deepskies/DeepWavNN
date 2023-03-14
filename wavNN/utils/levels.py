@@ -10,7 +10,6 @@ def calc_possible_levels(in_channels):
 def find_output_size(level, in_channels):
     sizes, levels = _input_characterics(in_channels=in_channels)
     assert len(levels) >= level
-    print(levels)
     return sizes[level]
 
 
