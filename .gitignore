@@ -21,7 +21,7 @@ MANIFEST
 
 # Python execution junk
 *.pyc
-__pycache__/
+*__pycache__/
 .mypy_cache/
 
 # Unit test / coverage reports
