@@ -1,6 +1,7 @@
 import torch
 import pywt
 from wavNN.utils.levels import Levels
+from wavNN.models.wavelet_layer import WaveletLayer
 
 
 class WavCNN(torch.nn.Module):
@@ -26,7 +27,7 @@ class WavCNN(torch.nn.Module):
         assert level != 0
 
         in_layer_size = Levels.find_output_size(level, in_channels)
-        self.wavelet = lambda x: torch.Tensor(pywt.wavedec2(x, "db1")[level])
+        self.wavelet = WaveletLayer(level=level)
 
         assert (
             kernel_size < in_layer_size

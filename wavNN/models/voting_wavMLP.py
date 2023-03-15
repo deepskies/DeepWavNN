@@ -2,7 +2,8 @@ import numpy as np
 from torch import nn
 import torch
 from wavNN.models.wavMLP import WavMLP
-from wavNN.utils import voting, levels
+from wavNN.utils.levels import Levels
+from wavNN.utils import voting
 
 
 class VotingMultiWavMLP(nn.Module):
@@ -15,18 +16,7 @@ class VotingMultiWavMLP(nn.Module):
         self.voting_method = voting_method
         self.tail = tail
 
-        # def calc_possible_level(input_size):
-        #     ddim, levels = input_size, []
-        #     level = 0
-        #     while ddim > 2:
-        #         ddim = int(np.rint(ddim / 2))
-        #         levels.append(level)
-        #         level += 1
-        #     levels = [level for level in levels if level != 0]
-        #     return levels
-
-        # possible_levels = calc_possible_level(in_channels)
-        possible_levels = levels.calc_possible_levels(in_channels)
+        possible_levels = Levels.calc_possible_levels(in_channels)
         possible_levels = [level for level in possible_levels if level != 0]
 
         hidden_sizes = (
