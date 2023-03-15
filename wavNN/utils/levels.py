@@ -1,25 +1,29 @@
 # Formula to calculate the levels and their dimensions
 import numpy as np
+import pywt
+import kymatio
 
 
-def calc_possible_levels(in_channels):
-    _, levels = _input_characterics(in_channels=in_channels)
-    return levels
+class Levels:
+    @staticmethod
+    def calc_possible_levels(in_channels):
+        _, levels = Levels._input_characterics(in_channels=in_channels)
+        return levels
 
+    @staticmethod
+    def find_output_size(level, in_channels):
+        sizes, levels = Levels._input_characterics(in_channels=in_channels)
+        assert len(levels) >= level
+        return sizes[levels[level]]
 
-def find_output_size(level, in_channels):
-    sizes, levels = _input_characterics(in_channels=in_channels)
-    assert len(levels) >= level
-    return sizes[levels[level]]
+    @staticmethod
+    def _input_characterics(in_channels, wavelet="haar"):
+        transform = np.random.rand(in_channels, in_channels)
+        transform = pywt.wavedec2(transform, wavelet)
+        transform_sizes = [np.array(x).shape[1] for x in transform]
+        levels = [i for i in range(len(transform_sizes))]
+        return transform_sizes, levels
 
-
-def _input_characterics(in_channels):
-    current_dimension, transform_sizes = in_channels, []
-    while current_dimension > 2:
-        current_dimension = int(np.rint(current_dimension / 2))
-        transform_sizes.append(current_dimension)
-        if current_dimension == 2:
-            transform_sizes.append(0)
-    transform_sizes.reverse()
-    levels = [i for i in range(len(transform_sizes))]
-    return transform_sizes, levels
+    @staticmethod
+    def _ky_input_characterics(in_channels):
+        pass
