@@ -6,13 +6,25 @@ import kymatio
 
 class Levels:
     @staticmethod
-    def calc_possible_levels(in_channels):
-        _, levels = Levels._input_characterics(in_channels=in_channels)
+    def calc_possible_levels(in_channels, backend="pywt"):
+        if backend == "pywt":
+            _, levels = Levels._input_characterics(in_channels=in_channels)
+        elif backend == "kymatio":
+            _, levels = Levels._ky_input_characterics(in_channels=in_channels)
+        else:
+            raise NotImplementedError
         return levels
 
     @staticmethod
-    def find_output_size(level, in_channels):
+    def find_output_size(level, in_channels, backend="pywt"):
         sizes, levels = Levels._input_characterics(in_channels=in_channels)
+        if backend == "pywt":
+            sizes, levels = Levels._input_characterics(in_channels=in_channels)
+        elif backend == "kymatio":
+            sizes, levels = Levels._ky_input_characterics(in_channels=in_channels)
+        else:
+            raise NotImplementedError
+
         assert len(levels) >= level
         return sizes[levels[level]]
 
@@ -26,4 +38,4 @@ class Levels:
 
     @staticmethod
     def _ky_input_characterics(in_channels):
-        pass
+        raise NotImplementedError
