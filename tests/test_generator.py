@@ -60,7 +60,7 @@ def test_batching():
     training = generator["training"]
     train_features, _ = next(iter(training))
 
-    assert len(train_features[0]) == batch_size
+    assert train_features.shape[0] == batch_size
 
 
 def test_label_alignment():
