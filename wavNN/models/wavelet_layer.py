@@ -4,7 +4,7 @@ import kymatio
 
 
 class WaveletLayer:
-    def __init__(self, level, backend="pywt") -> None:
+    def __init__(self, level: int, backend: str = "pywt") -> None:
 
         layers = {
             "pywt": lambda x: torch.Tensor(pywt.wavedec2(x, "db1")[level]),
