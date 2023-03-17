@@ -5,10 +5,10 @@ from wavNN.models.wavCNN import WavCNN
 
 
 def test_input_layer():
-    in_channels = 28
+    in_channels = 280
     out_channels = 1
-    level = 1
-    kernel_size = 4
+    level = -1
+    kernel_size = 2
     stride_distance = 2
     tail = True
     network = WavCNN(
@@ -26,10 +26,10 @@ def test_input_layer():
 
 
 def test_multibatch():
-    in_channels = 28
+    in_channels = 280
     out_channels = 1
-    level = 1
-    kernel_size = 4
+    level = 6
+    kernel_size = 2
     stride_distance = 2
     tail = True
     network = WavCNN(
@@ -45,10 +45,10 @@ def test_multibatch():
 
 def test_output_no_tail():
 
-    in_channels = 28
+    in_channels = 280
     out_channels = 1
-    level = 1
-    kernel_size = 4
+    level = 2
+    kernel_size = 3
     stride_distance = 2
     tail = False
     network = WavCNN(
@@ -67,10 +67,10 @@ def test_output_no_tail():
 
 
 def test_allowed_input_levels():
-    kernel_sizes = [1, 2]
-    allowed_levels = [1, 2, 3, 4]
+    kernel_sizes = [4, 8]
+    allowed_levels = [3, 4, 5, 6, 7]
     for level, kernel_size in zip(allowed_levels, kernel_sizes):
-        in_channels = 28
+        in_channels = 280
         out_channels = 1
         stride_distance = 2
         tail = True
@@ -90,11 +90,11 @@ def test_allowed_input_levels():
 
 def test_allowed_strides():
     stride_sizes = [1, 2]
-    allowed_levels = [1, 2, 3, 4]
+    allowed_levels = [3, 4, 5, 6]
     for level, kernel_size in zip(allowed_levels, stride_sizes):
-        in_channels = 28
+        in_channels = 280
         out_channels = 1
-        kernel_size = 4
+        kernel_size = 2
         stride_distance = 2
         tail = True
         network = WavCNN(
@@ -112,12 +112,12 @@ def test_allowed_strides():
 
 
 def test_forbidden_input_combos():
-    kernel_sizes = [45969, 4304, 2312, 12]
+    kernel_sizes = [45969, 4304, 2312, 1265]
     allowed_levels = [1, 2, 3, 4]
     for level, kernel_size in zip(allowed_levels, kernel_sizes):
-        in_channels = 28
+        in_channels = 280
         out_channels = 1
-        stride_distance = 2
+        stride_distance = 4
         tail = True
         with pytest.raises(AssertionError):
             WavCNN(
@@ -131,12 +131,12 @@ def test_forbidden_input_combos():
 
 
 def test_forbidden_strides():
-    stride_sizes = [45969, 4304, 2312, 12]
-    allowed_levels = [1, 2, 3, 4]
+    stride_sizes = [45969, 4304, 2312, 124322]
+    allowed_levels = [4, 4, 5, 6]
     for level, stride_distance in zip(allowed_levels, stride_sizes):
-        in_channels = 28
+        in_channels = 280
         out_channels = 1
-        kernel_size = 4
+        kernel_size = 2
         tail = True
         with pytest.raises(AssertionError):
             WavCNN(
@@ -150,11 +150,11 @@ def test_forbidden_strides():
 
 
 def test_pooling():
-    stride_distance = 2
-    level = 2
-    in_channels = 28
+    stride_distance = 1
+    level = -1
+    in_channels = 280
     out_channels = 1
-    kernel_size = 4
+    kernel_size = 2
     tail = True
     pool = True
     wavcnn = WavCNN(
@@ -167,3 +167,4 @@ def test_pooling():
         pool=pool,
     )
     assert hasattr(wavcnn, "pool")
+    assert wavcnn(torch.rand(*(64, in_channels, in_channels))).data.shape[0] == 64
