@@ -1,32 +1,9 @@
 import torch
 import torch.nn as nn
-import pywt
-import numpy as np
+
 from wavNN.utils import voting
 from wavNN.utils.levels import Levels
 from wavNN.models.wavelet_layer import WaveletLayer
-
-
-class VanillaMLP(nn.Module):
-    def __init__(self, in_channels, hidden_size, out_channels, tail=False):
-        super().__init__()
-
-        self.flatten_input = nn.Flatten()
-        self.hidden_layer = nn.Linear(in_channels**2, hidden_size)
-        self.output_layer = nn.Linear(hidden_size, out_channels)
-
-        if tail:
-            self.tail = nn.Softmax(dim=0)
-
-    def forward(self, x):
-        x = self.flatten_input(x)
-        x = self.hidden_layer(x)
-        x = self.output_layer(x)
-
-        if hasattr(self, "tail"):
-            x = self.tail(x)
-
-        return x
 
 
 class WavMLP(nn.Module):
