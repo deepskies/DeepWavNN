@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 
-from wavNN.utils import voting
 from wavNN.utils.levels import Levels
 from wavNN.models.wavelet_layer import WaveletLayer
 
