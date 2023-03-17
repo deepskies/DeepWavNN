@@ -27,7 +27,7 @@ class WavCNN(torch.nn.Module):
         assert level != 0
 
         in_layer_size = Levels.find_output_size(level, in_channels)
-        self.wavelet = WaveletLayer(level=level)
+        self.wavelet = WaveletLayer(level=level, input_size=in_channels, backend="pywt")
 
         assert (
             kernel_size < in_layer_size
@@ -46,8 +46,8 @@ class WavCNN(torch.nn.Module):
         )
         self.relu = torch.nn.ReLU()
 
-        pool_kernel_size = int(conv_out_channels / 1.5)
-        pool_stride = int(pool_kernel_size)
+        pool_kernel_size = 2
+        pool_stride = 2
 
         if pool:
             self.pool = torch.nn.MaxPool3d(
@@ -62,7 +62,7 @@ class WavCNN(torch.nn.Module):
                 linear_in_size = conv_out_channels * 3
             else:
                 linear_in_size = int(
-                    ((conv_out_channels - pool_kernel_size) / pool_stride) ** 3
+                    ((conv_out_channels - pool_kernel_size) / pool_stride) * 3
                 )
 
             self.tail = torch.nn.Linear(linear_in_size, out_channels)
