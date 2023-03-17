@@ -65,33 +65,3 @@ class WavMLP(nn.Module):
             x = self.tail(x)
 
         return x
-
-
-class VotingSingleWavMLP(WavMLP):
-    def __init__(
-        self,
-        in_channels: int,
-        hidden_size: int,
-        out_channels: int,
-        level: int,
-        voting_method: str = "hard",
-    ):
-
-        super().__init__(in_channels, hidden_size, out_channels, level, tail=False)
-
-        self.vote = {"hard": voting.hard_voting, "soft": voting.soft_voting}[
-            voting_method
-        ]
-
-    def forward(self, x):
-
-        x = self.wavelet(x)
-        # An MLP for each of the transformed levels
-        channel_1 = self.channel_1_mlp(self.flatten_wavelet(x[0]))
-        channel_2 = self.channel_2_mlp(self.flatten_wavelet(x[1]))
-        channel_3 = self.channel_3_mlp(self.flatten_wavelet(x[2]))
-
-        # Let them vote instead of just stacking them
-        probabilities = [channel_1, channel_2, channel_3]
-        x = self.vote(probabilities)
-        return x
