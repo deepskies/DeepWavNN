@@ -12,14 +12,17 @@ import numpy as np
 import math
 
 from wavNN.train_model import TrainingLoop
-from wavNN.models.wavMLP import WavMLP, VanillaMLP
+from wavNN.models.wavMLP import WavMLP
+from wavNN.models.vanillaMLP import VanillaMLP, BananaSplitMLP
 from wavNN.data_generators.mnist_generator import NMISTGenerator
 
 
-def run_vanilla():
+def run_vanilla(split=False):
     def training_function_vanilla(
         hidden_size, loss_id, optimizer_class_id, optimizer_lr, optimizer_momentum_id
     ):
+
+        model_class = VanillaMLP if not split else BananaSplitMLP
 
         optimizer_class = (
             torch.optim.SGD if optimizer_class_id < 0.5 else torch.optim.Adam
@@ -33,14 +36,13 @@ def run_vanilla():
         model_params = {
             "in_channels": 28,
             "hidden_size": math.ceil(hidden_size),
-            # "level": math.ceil(level),
             "out_channels": 10,
         }
 
         data_params = {"sample_size": [4000, 2000, 2000], "split": True}
 
         training = TrainingLoop(
-            model_class=VanillaMLP,
+            model_class=model_class,
             model_params=model_params,
             data_class=NMISTGenerator,
             data_params=data_params,
@@ -73,7 +75,12 @@ def run_vanilla():
     optimizer_vanilla.maximize(init_points=5, n_iter=30)
 
     history = optimizer_vanilla.res
-    outpath = "results/optimization/vanilla_baysianopt.json"
+
+    outpath = (
+        "results/optimization/vanilla_baysianopt.json"
+        if not split
+        else "results/optimization/vanilla_split_baysianopt.json"
+    )
     if not os.path.exists(os.path.dirname(outpath)):
         os.makedirs(os.path.dirname(outpath))
 
@@ -152,5 +159,5 @@ def run_wavmlp():
 
 
 if __name__ == "__main__":
-    run_vanilla()
-    run_wavmlp()
+    run_vanilla(split=True)
+    # run_wavmlp()
