@@ -37,7 +37,7 @@ class TrainingLoop:
                 momentum=optimizer_config["momentum"],
             )
         else:
-            self.optimizer = optimizer_config(
+            self.optimizer = optimizer_class(
                 self.model.parameters(), **optimizer_config
             )
 
@@ -52,7 +52,7 @@ class TrainingLoop:
         self.model.train(True)
         running_loss = 0
         running_accuracy = 0
-
+        i = 0
         for i, batch in enumerate(self.data_loader["training"]):
             data_input, label = batch
             self.optimizer.zero_grad()
@@ -68,7 +68,7 @@ class TrainingLoop:
         loss = running_loss / (i + 1)
         accuracy = running_accuracy / (i + 1)
 
-        return loss.item(), accuracy
+        return loss, accuracy
 
     def train(self, plot=False):
         for epoch in range(self.epochs):
@@ -87,7 +87,7 @@ class TrainingLoop:
         self.model.train(False)
         running_loss = 0
         running_accuracy = 0
-
+        i = 0
         for i, batch in enumerate(self.data_loader["validation"]):
             data_input, label = batch
             model_prediction = self.model(data_input)
@@ -99,12 +99,12 @@ class TrainingLoop:
 
         loss = running_loss / (i + 1)
         accuracy = running_accuracy / (i + 1)
-        return loss.item(), accuracy
+        return loss, accuracy
 
     def test(self):
         self.model.train(False)
         running_loss = 0
-
+        i = 0
         for i, batch in enumerate(self.data_loader["test"]):
             data_input, label = batch
             model_prediction = self.model(data_input)
