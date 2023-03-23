@@ -1,5 +1,4 @@
-from torch import nn
-from torch import tensor, stack
+import torch
 
 
 def soft_voting(probabilities):
@@ -10,6 +9,6 @@ def soft_voting(probabilities):
 
 def hard_voting(probabilities):
     # Take the max
-    probabilities = stack(probabilities).mT
-    votes = nn.functional.softmax(probabilities, dim=0)
+    probabilities = torch.swapdims(torch.stack(probabilities), 0, 1)
+    votes = torch.tensor(torch.argmax(probabilities, dim=1).float(), requires_grad=True)
     return votes
