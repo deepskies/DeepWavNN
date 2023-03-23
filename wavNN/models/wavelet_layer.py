@@ -50,5 +50,5 @@ class MiniWave(torch.nn.Module):
         channel_2 = self.channel_2_mlp(self.flatten_wavelet(x[1]))
         channel_3 = self.channel_3_mlp(self.flatten_wavelet(x[2]))
         # stack the outputs
-        concat = torch.stack([channel_1, channel_2, channel_3], dim=1)
+        concat = torch.stack([channel_1, channel_2, channel_3], dim=-1)
         return concat
