@@ -44,16 +44,21 @@ class WavePool(torch.nn.Module):
                 "max": torch.nn.MaxPool2d(kernel_size=pooling_size),
             }
         )[pooling_mode]
+        pooling_out_shape = {
+            "average": lambda x: math.floor(((x - pooling_size) / pooling_size) + 1),
+            "max": lambda x: math.floor(((x - 1) / pooling_size) + 1),
+        }[pooling_mode]
 
-        expected_pool_shape = [
-            math.floor(((in_size - pooling_size) / pooling_size) + 1)
-            for in_size in [hidden_size, self.n_levels, 3]
-        ]
-        pool_out_shape = int(math.prod(expected_pool_shape))
-        self.output = torch.nn.Linear(pool_out_shape, out_features=out_channels)
+        pool_out_shape = int(
+            math.prod([pooling_out_shape(in_size) for in_size in [self.n_levels, 3]])
+        )
+
+        self.output = torch.nn.Linear(
+            pool_out_shape * hidden_size, out_features=out_channels
+        )
 
     def forward(self, x):
         x = torch.stack([model.forward(x) for model in self.models], dim=-1)
         x = self.pool(x)
-        x = torch.flatten(x)
+        x = torch.flatten(x, start_dim=1, end_dim=-1)
         return self.output(x)
