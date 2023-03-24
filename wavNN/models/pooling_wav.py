@@ -40,8 +40,8 @@ class WavePool(torch.nn.Module):
 
         self.pool = torch.nn.ModuleDict(
             {
-                "average": torch.nn.AvgPool2d(kernel_size=pooling_size),
-                "max": torch.nn.MaxPool2d(kernel_size=pooling_size),
+                "average": torch.nn.AvgPool3d(kernel_size=pooling_size),
+                "max": torch.nn.MaxPool3d(kernel_size=pooling_size),
             }
         )[pooling_mode]
         pooling_out_shape = {
@@ -50,12 +50,15 @@ class WavePool(torch.nn.Module):
         }[pooling_mode]
 
         pool_out_shape = int(
-            math.prod([pooling_out_shape(in_size) for in_size in [self.n_levels, 3]])
+            math.prod(
+                [
+                    pooling_out_shape(in_size)
+                    for in_size in [hidden_size, self.n_levels, 3]
+                ]
+            )
         )
 
-        self.output = torch.nn.Linear(
-            pool_out_shape * hidden_size, out_features=out_channels
-        )
+        self.output = torch.nn.Linear(pool_out_shape, out_features=out_channels)
 
     def forward(self, x):
         x = torch.stack([model.forward(x) for model in self.models], dim=-1)
