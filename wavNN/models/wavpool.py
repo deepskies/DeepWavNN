@@ -7,24 +7,24 @@ Pools the results after reshaping the results from each hidden layer
 
 import torch
 import math
+import numpy as np
 
 from wavNN.utils.levels import Levels
 from wavNN.models.wavelet_layer import MiniWave
 
 
-class WavePool(torch.nn.Module):
+class WavPool(torch.nn.Module):
     def __init__(
         self,
         in_channels: int,
         hidden_size: int,
         out_channels: int,
-        pooling_size: int,
+        pooling_size: int = None,  # type: ignore
         pooling_mode: str = "average",
-        tail: bool = False,
+        hidden_pooling: int = None,  # type: ignore
+        level_pooling: int = None,  # type: ignore
     ) -> None:
         super().__init__()
-
-        self.tail = tail
 
         possible_levels = Levels.calc_possible_levels(in_channels)
         possible_levels = [level for level in possible_levels if level != 0]
@@ -38,24 +38,21 @@ class WavePool(torch.nn.Module):
                 MiniWave(level=level, in_channels=in_channels, hidden_size=hidden_size)
             )
 
+        if hidden_pooling is not None:
+            assert level_pooling is not None
+            pooling_kernel = (hidden_pooling, 1, level_pooling)
+        else:
+            pooling_kernel = (pooling_size, pooling_size, pooling_size)
+
         self.pool = torch.nn.ModuleDict(
             {
-                "average": torch.nn.AvgPool3d(kernel_size=pooling_size),
-                "max": torch.nn.MaxPool3d(kernel_size=pooling_size),
+                "average": torch.nn.AvgPool3d(kernel_size=pooling_kernel),
+                "max": torch.nn.MaxPool3d(kernel_size=pooling_kernel),
             }
         )[pooling_mode]
-        pooling_out_shape = {
-            "average": lambda x: math.floor(((x - pooling_size) / pooling_size) + 1),
-            "max": lambda x: math.floor(((x - 1) / pooling_size) + 1),
-        }[pooling_mode]
 
         pool_out_shape = int(
-            math.prod(
-                [
-                    pooling_out_shape(in_size)
-                    for in_size in [hidden_size, self.n_levels, 3]
-                ]
-            )
+            math.prod(self.pool(torch.rand(1, hidden_size, 3, self.n_levels)).shape)
         )
 
         self.output = torch.nn.Linear(pool_out_shape, out_features=out_channels)
