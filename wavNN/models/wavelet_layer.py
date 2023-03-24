@@ -1,4 +1,5 @@
 from typing import Union
+import numpy as np
 import torch
 import pywt
 from kymatio.torch import Scattering2D
@@ -11,7 +12,7 @@ class WaveletLayer:
     ) -> None:
 
         layers = {
-            "pywt": lambda x: torch.Tensor(pywt.wavedec2(x, "db1")[level]),
+            "pywt": lambda x: torch.Tensor(np.array(pywt.wavedec2(x, "db1")[level])),
             "kymatio": lambda x: self.kymatio_layer(level=level, input_size=input_size)(
                 x
             )[level],
