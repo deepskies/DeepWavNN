@@ -3,7 +3,7 @@ from torchvision.transforms import ToTensor
 from torchvision.datasets import FashionMNIST
 
 
-class NMISTGenerator(DataGenerator):
+class FashionMNISTGenerator(DataGenerator):
     def __init__(self):
         dataset = FashionMNIST(
             root="./data/fashionmnist", download=True, train=True, transform=ToTensor()
