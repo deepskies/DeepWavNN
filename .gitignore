@@ -42,6 +42,9 @@ coverage.xml
 # results
 checkpoints/
 
+# data files (should be picked up by the no-push pre-commit
+*-ubytes*
+
 # Environments
 .env
 .venv
