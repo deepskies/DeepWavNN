@@ -23,6 +23,7 @@ class WavPool(torch.nn.Module):
         pooling_mode: str = "average",
         hidden_pooling: int = None,  # type: ignore
         level_pooling: int = None,  # type: ignore
+        hidden_layer_scaling: bool = False,
     ) -> None:
         super().__init__()
 
@@ -32,8 +33,20 @@ class WavPool(torch.nn.Module):
         self.n_levels = len(possible_levels)
         self.input = torch.nn.Flatten(start_dim=1, end_dim=-1)
 
+        hidden_sizes = (
+            hidden_size
+            if type(hidden_size) == list
+            else {
+                True: [int(hidden_size / (i + 1)) for i in range(self.n_levels)],
+                False: [hidden_size for _ in range(self.n_levels)],
+            }[hidden_layer_scaling]
+        )
+        if hidden_layer_scaling:
+            hidden_sizes.reverse()
+
+        self.max_hidden = max(hidden_sizes)
         self.models = torch.nn.ModuleList()
-        for level in possible_levels:
+        for level, hidden_size in zip(possible_levels, hidden_sizes):
             self.models.append(
                 MiniWave(level=level, in_channels=in_channels, hidden_size=hidden_size)
             )
@@ -52,13 +65,20 @@ class WavPool(torch.nn.Module):
         )[pooling_mode]
 
         pool_out_shape = int(
-            math.prod(self.pool(torch.rand(1, hidden_size, 3, self.n_levels)).shape)
+            math.prod(self.pool(torch.rand(1, self.max_hidden, 3, self.n_levels)).shape)
         )
 
         self.output = torch.nn.Linear(pool_out_shape, out_features=out_channels)
 
     def forward(self, x):
-        x = torch.stack([model.forward(x) for model in self.models], dim=-1)
+        level_outputs = [model.forward(x) for model in self.models]
+        x = [
+            torch.nn.functional.pad(
+                x, pad=(0, 0, self.max_hidden - x.shape[1], 0), mode="constant", value=0
+            )
+            for x in level_outputs
+        ]
+        x = torch.stack(x, dim=-1)
         x = self.pool(x)
         x = torch.flatten(x, start_dim=1, end_dim=-1)
         return self.output(x)
