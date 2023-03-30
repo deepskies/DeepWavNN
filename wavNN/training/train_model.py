@@ -5,6 +5,7 @@ Basic training loop for the selected model
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import numpy as np
 import torch
 import tqdm
 import matplotlib.pyplot as plt
@@ -58,6 +59,7 @@ class TrainingLoop:
 
         self.early_stopping_critreon = 0
         self.current_epoch = 0
+        self.n_classes = None
 
     def train_one_epoch(self):
         self.model.train(True)
@@ -69,6 +71,7 @@ class TrainingLoop:
             tqdm.tqdm(self.data_loader["training"], desc="Training....")
         ):
             data_input, label = batch
+
             self.optimizer.zero_grad()
 
             model_prediction = self.model(data_input)
@@ -122,8 +125,8 @@ class TrainingLoop:
             self.plot_history()
 
     def validate(self):
-        loss, extra_metrics, _, _ = self.test_single_epoch(
-            data_loader=self.data_loader["validate"]
+        loss, extra_metrics, _ = self.test_single_epoch(
+            data_loader=self.data_loader["validation"]
         )
         return loss, extra_metrics
 
@@ -132,8 +135,8 @@ class TrainingLoop:
         running_loss = 0
         running_metrics = [0 for _ in range(len(self.extra_metrics))]
         i = 0
-        labels = []
-        predictions = []
+
+        predictions = torch.tensor([])
         for i, batch in enumerate(data_loader):
             data_input, label = batch
             model_prediction = self.model(data_input)
@@ -143,18 +146,23 @@ class TrainingLoop:
                     model_prediction, label
                 )
 
+            predictions = torch.concat((predictions, model_prediction))
             running_loss += loss
-            labels += label
-            predictions += predictions
 
         loss = running_loss / (i + 1)
 
         extra_metrics = [metric / (i + 1) for metric in running_metrics]
-        return loss, extra_metrics, predictions, labels
+
+        return loss, extra_metrics, predictions
 
     def test(self, save_path):
-        _, _, predictions, labels = self.test_single_epoch(self.data_loader["test"])
-        self.plot_test_results(predictions, labels, save_path)
+        _, _, predictions = self.test_single_epoch(self.data_loader["test"])
+        labels = torch.Tensor([])
+        for batch in self.data_loader["test"]:
+            _, label = batch
+            labels = torch.concat((labels, label))
+
+        self.plot_test_results(predictions, labels.detach().numpy(), save_path)
 
     def plot_test_results(self, predictions, labels, save_path=None):
         roc_curve = TrainingMetrics.auc_curve(predictions, labels)
@@ -173,16 +181,17 @@ class TrainingLoop:
         plt.xlabel("Predicted")
         plt.ylabel("True")
         plt.title("Confusion Matrix")
-        plt.show()
         if save_path is not None:
             plt.savefig(f"{save_path}/confusion.png")
+        else:
+            plt.show()
         plt.close("all")
 
     def plot_history(self, save_path=None):
         history = pd.DataFrame(self.history)
         epochs = range(len(history))
         n_subplots = len(self.extra_metrics) + 1
-        fig, subplots = plt.subplots(nrows=n_subplots, n_columns=1)
+        fig, subplots = plt.subplots(nrows=n_subplots, ncols=1)
 
         for metric_index, metrics in enumerate(self.extra_metrics):
             training = history[f"train_{metrics.__name__}"]
@@ -197,17 +206,16 @@ class TrainingLoop:
         metric_index = -1
         subplots[metric_index].plot(epochs, history["train_loss"], label="Train")
         subplots[metric_index].plot(epochs, history["val_loss"], label="Validation")
-        subplots[metric_index].set_xticks([])
+        subplots[metric_index].set_xticks(epochs)
         subplots[metric_index].set_ylabel("Loss")
         subplots[metric_index].legend()
 
-        fig.set_xlabel("epoch")
-        fig.set_title("History")
-        fig.show()
+        plt.xlabel("epoch")
 
         if save_path is not None:
             fig.savefig(f"{save_path}/history.png")
-
+        else:
+            plt.show()
         plt.close("all")
 
     def save(self, save_path):
@@ -225,41 +233,7 @@ class TrainingLoop:
         if save:
             self.test(save_path)
             self.save(save_path)
+            self.plot_history(save_path)
         else:
             self.test(save_path=None)
-
-
-if __name__ == "__main__":
-    import sys
-
-    sys.path.append("..")
-
-    from wavNN.models.wavpool import WavPool
-    from wavNN.data_generators.fashion_mnist_generator import FashionMNISTGenerator
-
-    model_params = {
-        "in_channels": 28,
-        "hidden_size": 256,
-        "out_channels": 10,
-        "pooling_size": 3,
-        "pooling_mode": "average",
-    }
-
-    wavepool_history = {}
-    num_tests = 3
-
-    data_params = {"sample_size": [4000, 2000, 2000], "split": True}
-    optimizer_config = {"lr": 0.1, "momentum": False}
-
-    loop = TrainingLoop(
-        model_class=WavPool,
-        model_params=model_params,
-        data_class=FashionMNISTGenerator,
-        data_params=data_params,
-        optimizer_class=torch.optim.SGD,
-        optimizer_config=optimizer_config,
-        loss=torch.nn.CrossEntropyLoss,
-    )
-    loop()
-    history = loop.history
-    # pd.DataFrame(history).to_csv("wavpool_test.csv")
+            self.plot_history(save_path=None)

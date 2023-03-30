@@ -1,8 +1,6 @@
-from torcheval.metrics.functional import (
-    multiclass_f1_score,
-    multiclass_confusion_matrix,
-)
-from sklearn.metrics import roc_auc_score, roc_curve
+from torcheval.metrics.functional import multiclass_f1_score
+from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
+import numpy as np
 
 import torch
 
@@ -15,28 +13,34 @@ class TrainingMetrics:
     @staticmethod
     def accuracy(prediction, label):
         _, predicted_class = torch.max(prediction, 1)
+
         return (label == predicted_class).sum().item() / label.size(0)
 
     @staticmethod
     def auc_roc(prediction: torch.Tensor, label: torch.Tensor):
+        n_classes = prediction.shape[1]
+        eye = np.eye(n_classes)
+
         _, predicted_class = torch.max(prediction, 1)
-        return roc_auc_score(label, predicted_class).detach().numpy()
+        predicted_class = predicted_class.detach().numpy()
+        return roc_auc_score(eye[label], eye[predicted_class], multi_class="ovo")
 
     @staticmethod
     def auc_curve(prediction, label):
+        n_classes = prediction.shape[1]
+        eye = np.eye(n_classes)
+
         _, predicted_class = torch.max(prediction, 1)
-        score_fpr, score_tpr, _ = roc_curve(label, predicted_class)
+        predicted_class = predicted_class.detach().numpy()
+        print(np.array(label))
+        label = eye[np.array(label).astype(int)].ravel()
+        score_fpr, score_tpr, _ = roc_curve(label, eye[predicted_class].ravel())
         return score_fpr, score_tpr
 
     @staticmethod
     def confusion_matrix(prediction, label):
+        num_classes = [i + 1 for i in range(prediction.shape[1])]
         _, predicted_class = torch.max(prediction, 1)
-        ## Assume all the classes are presentated in the label
-        num_classes = torch.unique(label)
-        return (
-            multiclass_confusion_matrix(
-                input=predicted_class, target=label, num_classes=num_classes
-            )
-            .detach()
-            .numpy()
+        return confusion_matrix(
+            label.ravel(), predicted_class.ravel(), labels=num_classes
         )
