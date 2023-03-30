@@ -2,14 +2,14 @@
 Basic training loop for the selected model
 """
 
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import torch
 import tqdm
+import matplotlib.pyplot as plt
 
-from torcheval.metrics.functional import multiclass_f1_score
+from wavNN.training.training_metrics import TrainingMetrics
 
 
 class TrainingLoop:
@@ -41,7 +41,7 @@ class TrainingLoop:
         )
 
         self.extra_metrics = (
-            [self.f1, self.accuracy]
+            [TrainingMetrics.f1, TrainingMetrics.accuracy]
             if "extra_metrics" not in training_configs
             else training_configs["extra_metrics"]
         )
@@ -58,13 +58,6 @@ class TrainingLoop:
 
         self.early_stopping_critreon = 0
         self.current_epoch = 0
-
-    def f1(self, prediction, label):
-        return multiclass_f1_score(target=label, input=prediction).detach().numpy()
-
-    def accuracy(self, prediction, label):
-        _, predicted_class = torch.max(prediction, 1)
-        return (label == predicted_class).sum().item() / label.size(0)
 
     def train_one_epoch(self):
         self.model.train(True)
@@ -129,12 +122,19 @@ class TrainingLoop:
             self.plot_history()
 
     def validate(self):
-        self.model.train(False)
+        loss, extra_metrics, _, _ = self.test_single_epoch(
+            data_loader=self.data_loader["validate"]
+        )
+        return loss, extra_metrics
 
+    def test_single_epoch(self, data_loader):
+        self.model.train(False)
         running_loss = 0
         running_metrics = [0 for _ in range(len(self.extra_metrics))]
         i = 0
-        for i, batch in enumerate(self.data_loader["validation"]):
+        labels = []
+        predictions = []
+        for i, batch in enumerate(data_loader):
             data_input, label = batch
             model_prediction = self.model(data_input)
             loss = self.loss(model_prediction, label)
@@ -144,38 +144,71 @@ class TrainingLoop:
                 )
 
             running_loss += loss
+            labels += label
+            predictions += predictions
 
         loss = running_loss / (i + 1)
 
         extra_metrics = [metric / (i + 1) for metric in running_metrics]
-        return loss, extra_metrics
+        return loss, extra_metrics, predictions, labels
 
-    def test(self):
-        self.model.train(False)
-        running_loss = 0
-        i = 0
-        for i, batch in enumerate(self.data_loader["test"]):
-            data_input, label = batch
-            model_prediction = self.model(data_input)
-            loss = self.loss(model_prediction, label)
-            running_loss += loss
+    def test(self, save_path):
+        _, _, predictions, labels = self.test_single_epoch(self.data_loader["test"])
+        self.plot_test_results(predictions, labels, save_path)
 
-        return running_loss / (i + 1)
+    def plot_test_results(self, predictions, labels, save_path=None):
+        roc_curve = TrainingMetrics.auc_curve(predictions, labels)
+        confusion = TrainingMetrics.confusion_matrix(predictions, labels)
+
+        plt.plot(roc_curve[0], roc_curve[1])
+        plt.xlabel("FPR")
+        plt.ylabel("TPR")
+        plt.title("ROC AUC Curve")
+        plt.show()
+        if save_path is not None:
+            plt.savefig(f"{save_path}/roc.png")
+        plt.close("all")
+
+        plt.imshow(confusion)
+        plt.xlabel("Predicted")
+        plt.ylabel("True")
+        plt.title("Confusion Matrix")
+        plt.show()
+        if save_path is not None:
+            plt.savefig(f"{save_path}/confusion.png")
+        plt.close("all")
 
     def plot_history(self, save_path=None):
         history = pd.DataFrame(self.history)
-        train, val = history["train_loss"], history["val_loss"]
-
         epochs = range(len(history))
+        n_subplots = len(self.extra_metrics) + 1
+        fig, subplots = plt.subplots(nrows=n_subplots, n_columns=1)
 
-        plt.scatter(epochs, train, label="Train Loss", alpha=0.8, marker="o")  # type: ignore
-        plt.scatter(epochs, val, label="Validation Loss", alpha=0.8, marker="x")  # type: ignore
-        plt.xlabel("Epoch")
-        plt.ylabel("Loss")
-        plt.legend()
+        for metric_index, metrics in enumerate(self.extra_metrics):
+            training = history[f"train_{metrics.__name__}"]
+            val = history[f"val_{metrics.__name__}"]
+
+            subplots[metric_index].plot(epochs, training, label="Train")
+            subplots[metric_index].plot(epochs, val, label="Validation")
+            subplots[metric_index].set_xticks([])
+            subplots[metric_index].set_ylabel(metrics.__name__)
+            subplots[metric_index].legend()
+
+        metric_index = -1
+        subplots[metric_index].plot(epochs, history["train_loss"], label="Train")
+        subplots[metric_index].plot(epochs, history["val_loss"], label="Validation")
+        subplots[metric_index].set_xticks([])
+        subplots[metric_index].set_ylabel("Loss")
+        subplots[metric_index].legend()
+
+        fig.set_xlabel("epoch")
+        fig.set_title("History")
+        fig.show()
 
         if save_path is not None:
-            plt.savefig(f"{save_path}/history.png")
+            fig.savefig(f"{save_path}/history.png")
+
+        plt.close("all")
 
     def save(self, save_path):
         if not os.path.exists(save_path):
@@ -186,13 +219,14 @@ class TrainingLoop:
         history_path = f"{save_path}/history.csv"
         pd.DataFrame(self.history).to_csv(history_path)
 
-        self.plot_history(save_path)
-
     def __call__(self, save=False, save_path="./model_results/"):
         self.train()
 
         if save:
+            self.test(save_path)
             self.save(save_path)
+        else:
+            self.test(save_path=None)
 
 
 if __name__ == "__main__":
@@ -228,4 +262,4 @@ if __name__ == "__main__":
     )
     loop()
     history = loop.history
-    pd.DataFrame(history).to_csv("wavpool_test.csv")
+    # pd.DataFrame(history).to_csv("wavpool_test.csv")
