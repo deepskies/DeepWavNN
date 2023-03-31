@@ -33,11 +33,11 @@ class WaveletLayer:
 
 
 class MiniWave(torch.nn.Module):
-    def __init__(self, level, in_channels, hidden_size) -> None:
+    def __init__(self, level: int, in_channels: int, hidden_size: int) -> None:
         super().__init__()
         self.wavelet = WaveletLayer(level=level)
         wav_in_channels = Levels.find_output_size(level, in_channels)
-
+        hidden_size = int(hidden_size)
         self.flatten_wavelet = torch.nn.Flatten(start_dim=1, end_dim=-1)
         # Channels for each of the 3 channels of the wavelet (Not including the downscaled original
         self.channel_1_mlp = torch.nn.Linear(wav_in_channels**2, hidden_size)

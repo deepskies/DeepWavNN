@@ -48,7 +48,9 @@ class WavPool(torch.nn.Module):
         self.models = torch.nn.ModuleList()
         for level, hidden_size in zip(possible_levels, hidden_sizes):
             self.models.append(
-                MiniWave(level=level, in_channels=in_channels, hidden_size=hidden_size)
+                MiniWave(
+                    level=level, in_channels=in_channels, hidden_size=int(hidden_size)
+                )
             )
 
         if hidden_pooling is not None:
