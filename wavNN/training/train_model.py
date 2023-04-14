@@ -8,7 +8,6 @@ import os
 import numpy as np
 import torch
 import tqdm
-import matplotlib.pyplot as plt
 
 from wavNN.training.training_metrics import TrainingMetrics
 
@@ -104,7 +103,7 @@ class TrainingLoop:
 
         return True
 
-    def train(self, plot=False):
+    def train(self):
         not_stopping = True
         while not_stopping:
             train_loss, train_metrics = self.train_one_epoch()
@@ -120,9 +119,6 @@ class TrainingLoop:
                 self.history[f"val_{metric.__name__}"].append(val_metrics[metric_index])
 
             not_stopping = self.is_still_training()
-
-        if plot:
-            self.plot_history()
 
     def validate(self):
         loss, extra_metrics, _ = self.test_single_epoch(
@@ -155,69 +151,6 @@ class TrainingLoop:
 
         return loss, extra_metrics, predictions
 
-    def test(self, save_path):
-        _, _, predictions = self.test_single_epoch(self.data_loader["test"])
-        labels = torch.Tensor([])
-        for batch in self.data_loader["test"]:
-            _, label = batch
-            labels = torch.concat((labels, label))
-
-        self.plot_test_results(predictions, labels.detach().numpy(), save_path)
-
-    def plot_test_results(self, predictions, labels, save_path=None):
-        roc_curve = TrainingMetrics.auc_curve(predictions, labels)
-        confusion = TrainingMetrics.confusion_matrix(predictions, labels)
-
-        plt.plot(roc_curve[0], roc_curve[1])
-        plt.xlabel("FPR")
-        plt.ylabel("TPR")
-        plt.title("ROC AUC Curve")
-        plt.show()
-        if save_path is not None:
-            plt.savefig(f"{save_path}/roc.png")
-        plt.close("all")
-
-        plt.imshow(confusion)
-        plt.xlabel("Predicted")
-        plt.ylabel("True")
-        plt.title("Confusion Matrix")
-        if save_path is not None:
-            plt.savefig(f"{save_path}/confusion.png")
-        else:
-            plt.show()
-        plt.close("all")
-
-    def plot_history(self, save_path=None):
-        history = pd.DataFrame(self.history)
-        epochs = range(len(history))
-        n_subplots = len(self.extra_metrics) + 1
-        fig, subplots = plt.subplots(nrows=n_subplots, ncols=1)
-
-        for metric_index, metrics in enumerate(self.extra_metrics):
-            training = history[f"train_{metrics.__name__}"]
-            val = history[f"val_{metrics.__name__}"]
-
-            subplots[metric_index].plot(epochs, training, label="Train")
-            subplots[metric_index].plot(epochs, val, label="Validation")
-            subplots[metric_index].set_xticks([])
-            subplots[metric_index].set_ylabel(metrics.__name__)
-            subplots[metric_index].legend()
-
-        metric_index = -1
-        subplots[metric_index].plot(epochs, history["train_loss"], label="Train")
-        subplots[metric_index].plot(epochs, history["val_loss"], label="Validation")
-        subplots[metric_index].set_xticks(epochs)
-        subplots[metric_index].set_ylabel("Loss")
-        subplots[metric_index].legend()
-
-        plt.xlabel("epoch")
-
-        if save_path is not None:
-            fig.savefig(f"{save_path}/history.png")
-        else:
-            plt.show()
-        plt.close("all")
-
     def save(self, save_path):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
@@ -227,13 +160,5 @@ class TrainingLoop:
         history_path = f"{save_path}/history.csv"
         pd.DataFrame(self.history).to_csv(history_path)
 
-    def __call__(self, save=False, save_path="./model_results/"):
+    def __call__(self):
         self.train()
-
-        if save:
-            self.test(save_path)
-            self.save(save_path)
-            self.plot_history(save_path)
-        else:
-            self.test(save_path=None)
-            self.plot_history(save_path=None)
