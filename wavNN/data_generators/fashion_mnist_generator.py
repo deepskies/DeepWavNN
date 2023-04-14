@@ -6,6 +6,9 @@ from torchvision.datasets import FashionMNIST
 class FashionMNISTGenerator(DataGenerator):
     def __init__(self):
         dataset = FashionMNIST(
-            root="./data/fashionmnist", download=True, train=True, transform=ToTensor()
+            root="wavNN/data/fashionmnist",
+            download=True,
+            train=True,
+            transform=ToTensor(),
         )
         super().__init__(dataset=dataset)

@@ -6,6 +6,6 @@ from torchvision.datasets import CIFAR10
 class CIFARGenerator(DataGenerator):
     def __init__(self):
         dataset = CIFAR10(
-            root="WavNN/data/cifar10", download=True, train=True, transform=ToTensor()
+            root="wavNN/data/cifar10", download=True, train=True, transform=ToTensor()
         )
         super().__init__(dataset=dataset)
