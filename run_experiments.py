@@ -42,7 +42,7 @@ class RunExperiment:
             "optimizer_kwargs": {"lr": 0.01, "momentum": False},
             "optimizer": "SGD",
             "loss": "CrossEntropyLoss",
-            "epochs": 80,
+            "epochs": 20,
             "training_metrics": [
                 TrainingMetrics.accuracy,
                 TrainingMetrics.auc_roc,
@@ -121,6 +121,7 @@ class RunExperiment:
             loss=self.loss,
             training_configs=self.experiment_config,
         )
+        loop()
         history = loop.history
         return history
 
