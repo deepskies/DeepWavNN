@@ -93,7 +93,15 @@ class RunExperiment:
         return losses[self.experiment_config["loss"]]
 
     def time_inference(self):
-        pass
+        model = self.model(**self.experiment_config["model_kwargs"])
+        in_size = self.experiment_config["model_kwargs"]["in_channels"]
+        random_input = torch.rand(1, in_size, in_size)
+
+        start_time = datetime.datetime.now()
+        model(random_input)
+        inference_time = abs(start_time - datetime.datetime.now()).total_seconds()
+
+        return inference_time
 
     def count_params(self):
         model = self.model(**self.experiment_config["model_kwargs"])
