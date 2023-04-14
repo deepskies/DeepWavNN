@@ -165,8 +165,38 @@ class RunExperiment:
 
 
 if __name__ == "__main__":
-    test_class = RunExperiment(
-        {"model": "VanillaMLP", "data": "MNISTGenerator", "save_path": "./results/test"}
-    )
+    models_to_test = [
+        ("VanillaMLP", {"hidden_size": 132, "out_channels": 10}),
+        ("WavMLP", {"hidden_size": 132, "out_channels": 10, "level": 2}),
+        (
+            "WavPool",
+            {
+                "hidden_size": 132,
+                "out_channels": 10,
+                "pooling_size": 3,
+                "pooling_mode": "max",
+                "hidden_layer_scaling": True,
+            },
+        ),
+        ("VanillaCNN", {"hidden_size": 132, "out_channels": 10}),
+    ]
+    learning_rates = [0.03, 0.015, 0.1, 0.05]
 
-    test_class()
+    data_to_test = ["CIFARGenerator", "MNISTGenerator", "FashionMNISTGenerator"]
+    data_sizes = [32, 28, 28]
+
+    for model, lr in zip(models_to_test, learning_rates):
+        for data, data_size in zip(data_to_test, data_sizes):
+
+            model[1]["in_channels"] = data_size
+            experiment_config = {
+                "model": model[0],
+                "model_kwargs": model[1],
+                "data": data,
+                "epochs": 120,
+                "save_path": "./results/naive_params",
+                "optimizer_kwargs": {"lr": lr, "momentum": False},
+            }
+
+            experiment = RunExperiment(experiment_config=experiment_config)
+            experiment()
