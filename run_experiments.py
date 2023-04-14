@@ -95,7 +95,7 @@ class RunExperiment:
     def time_inference(self):
         model = self.model(**self.experiment_config["model_kwargs"])
         in_size = self.experiment_config["model_kwargs"]["in_channels"]
-        random_input = torch.rand(1, in_size, in_size)
+        random_input = torch.rand(1, 1, in_size, in_size)
 
         start_time = datetime.datetime.now()
         model(random_input)
@@ -119,7 +119,8 @@ class RunExperiment:
             optimizer_class=self.optimizer,
             optimizer_config=self.experiment_config["optimizer_kwargs"],
             loss=self.loss,
-            training_configs=self.experiment_config,
+            epochs=self.experiment_config["epochs"],
+            extra_metrics=self.experiment_config["training_metrics"],
         )
         loop()
         history = loop.history
@@ -166,21 +167,21 @@ class RunExperiment:
 
 if __name__ == "__main__":
     models_to_test = [
-        ("VanillaMLP", {"hidden_size": 132, "out_channels": 10}),
-        ("WavMLP", {"hidden_size": 132, "out_channels": 10, "level": 2}),
+        ("VanillaCNN", {"kernel_size": 4, "out_channels": 10}),
+        ("VanillaMLP", {"hidden_size": 264, "out_channels": 10}),
+        ("WavMLP", {"hidden_size": 264, "out_channels": 10, "level": 2}),
         (
             "WavPool",
             {
-                "hidden_size": 132,
+                "hidden_size": 264,
                 "out_channels": 10,
                 "pooling_size": 3,
                 "pooling_mode": "max",
                 "hidden_layer_scaling": True,
             },
         ),
-        ("VanillaCNN", {"hidden_size": 132, "out_channels": 10}),
     ]
-    learning_rates = [0.03, 0.015, 0.1, 0.05]
+    learning_rates = [0.05, 0.03, 0.015, 0.1]
 
     data_to_test = ["CIFARGenerator", "MNISTGenerator", "FashionMNISTGenerator"]
     data_sizes = [32, 28, 28]
