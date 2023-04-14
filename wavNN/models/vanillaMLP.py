@@ -7,7 +7,7 @@ class VanillaMLP(nn.Module):
         self, in_channels: int, hidden_size: int, out_channels: int, tail: bool = False
     ):
         super().__init__()
-        hidden_size = int(hidden_size)
+
         self.flatten_input = nn.Flatten()
         self.hidden_layer = nn.Linear(in_channels**2, hidden_size)
         self.output_layer = nn.Linear(hidden_size, out_channels)
