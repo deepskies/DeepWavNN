@@ -106,7 +106,18 @@ class OptimizeFromConfig(Optimize):
         super().__init__(**optimizer_kwargs)
 
     def add_config_params(self, config_file):
-        default_config = {}
+        default_config = {
+            "model": "",
+            "data_class": "",
+            "data_config": {},
+            "monitor": "",
+            "epochs": "",
+            "n_optimizer_iters": "",
+            "save": "",
+            "save_path": "",
+            "parameters_space": {},
+            "parameter_function": {},
+        }
 
     def read_config(self, config_file):
 
