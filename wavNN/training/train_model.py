@@ -3,9 +3,7 @@ Basic training loop for the selected model
 """
 
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
-import numpy as np
 import torch
 import tqdm
 
