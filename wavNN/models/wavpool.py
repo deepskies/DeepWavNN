@@ -31,7 +31,6 @@ class WavPool(torch.nn.Module):
         possible_levels = [level for level in possible_levels if level != 0]
 
         self.n_levels = len(possible_levels)
-        self.input = torch.nn.Flatten(start_dim=1, end_dim=-1)
 
         hidden_sizes = (
             hidden_size
