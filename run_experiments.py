@@ -166,37 +166,71 @@ class RunExperiment:
 
 
 if __name__ == "__main__":
+    from wavNN.training.finetune_network import OptimizeFromConfig
+
     models_to_test = [
-        ("VanillaCNN", {"kernel_size": 4, "out_channels": 10}),
-        ("VanillaMLP", {"hidden_size": 264, "out_channels": 10}),
-        ("WavMLP", {"hidden_size": 264, "out_channels": 10, "level": 2}),
+        ("VanillaCNN", {"kernel_size": (2, 4), "out_channels": 10}),
+        ("VanillaMLP", {"hidden_size": (200, 300), "out_channels": 10}),
+        ("WavMLP", {"hidden_size": (200, 300), "out_channels": 10, "level": (1, 3)}),
         (
             "WavPool",
             {
-                "hidden_size": 264,
+                "hidden_size": (200, 300),
                 "out_channels": 10,
-                "pooling_size": 3,
-                "pooling_mode": "max",
-                "hidden_layer_scaling": True,
+                "pooling_size": (2, 4),
+                "pooling_mode": ["max", "avg"],
+                "hidden_layer_scaling": [True],
             },
         ),
     ]
-    learning_rates = [0.05, 0.03, 0.015, 0.1]
-
     data_to_test = ["CIFARGenerator", "MNISTGenerator", "FashionMNISTGenerator"]
     data_sizes = [32, 28, 28]
 
-    for model, lr in zip(models_to_test, learning_rates):
+    for model in models_to_test:
         for data, data_size in zip(data_to_test, data_sizes):
 
+            model_class = models.__dict__[model[0]]
+            data_class = datagens.__dict__[data]
+
             model[1]["in_channels"] = data_size
+            opt_config = {
+                "model": model_class,
+                "model_config": model[1],
+                "data_class": data_class,
+                "data_config": {"sample_size": [4000, 2000, 2000], "split": True},
+                "optimizer": {
+                    "id": [torch.optim.SGD, torch.optim.Adam],
+                    "lr": (0.000001, 0.8),
+                },
+                "loss": [torch.nn.CrossEntropyLoss],
+                "monitor": "val_f1",
+                "epochs": 2,
+                "n_optimizer_iters": 2,
+                "save": False,
+                "save_path": "",
+            }
+            optimizer_engine = OptimizeFromConfig(opt_config)
+            best_parms = optimizer_engine()
+
+            selection_function = optimizer_engine.build_selection_function(opt_config)
+            (
+                model_params,
+                optimizer,
+                optimizer_params,
+                _,
+            ) = selection_function(**best_parms)
+
+            optimizer = {torch.optim.SGD: "SGD", torch.optim.Adam: "Adam"}[optimizer]
+
+            model_params["in_channels"] = data_size
             experiment_config = {
                 "model": model[0],
-                "model_kwargs": model[1],
+                "model_kwargs": model_params,
                 "data": data,
                 "epochs": 120,
-                "save_path": "./results/naive_params",
-                "optimizer_kwargs": {"lr": lr, "momentum": False},
+                "save_path": "./results/optimize_params",
+                "optimizer": optimizer,
+                "optimizer_kwargs": optimizer_params,
             }
 
             experiment = RunExperiment(experiment_config=experiment_config)

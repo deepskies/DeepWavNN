@@ -63,8 +63,8 @@ class Optimize:
             epochs=self.epochs,
             optimizer_class=optimizer,
             optimizer_config=optimizer_params,
-            training_configs=model_params["training_configs"],
         )
+
         training()
         history = training.history
         quality = np.max(np.asarray(history[self.monitor_metric]))
@@ -107,17 +107,18 @@ class OptimizeFromConfig(Optimize):
 
     def add_config_params(self, config_file):
         default_config = {
-            "model": "",
-            "data_class": "",
             "data_config": {},
-            "monitor": "",
-            "epochs": "",
-            "n_optimizer_iters": "",
-            "save": "",
+            "monitor": "val_accuracy",
+            "epochs": 20,
+            "n_optimizer_iters": 40,
+            "save": False,
             "save_path": "",
             "parameters_space": {},
             "parameter_function": {},
         }
+        for field in default_config:
+            if field not in config_file.keys():
+                config_file[field] = default_config[field]
 
     def read_config(self, config_file):
 
@@ -133,7 +134,7 @@ class OptimizeFromConfig(Optimize):
         parameter_space = self.build_parameter_space(config_file)
         parameter_function = self.build_selection_function(config_file)
 
-        return {
+        optimizer_config = {
             "model": model,
             "parameter_space": parameter_space,
             "parameter_selection_function": parameter_function,
@@ -145,6 +146,8 @@ class OptimizeFromConfig(Optimize):
             "save": save,
             "save_path": save_path,
         }
+
+        return optimizer_config
 
     def build_parameter_space(self, config_file):
         parameter_space = {}
@@ -181,8 +184,6 @@ class OptimizeFromConfig(Optimize):
                         ]
 
                     parameter_name = f"{category}_{parameter}"
-                    print(config_file[category][parameter])
-                    print(math.floor(param_dict[parameter_name]))
                     parameters[parameter] = (
                         param_dict[parameter_name]
                         if continious
@@ -197,10 +198,10 @@ class OptimizeFromConfig(Optimize):
             loss_id = math.floor(param_dict["loss_id"])
             loss_function = config_file["loss"][loss_id]
 
-            for param in config_file["training_configs"]:
-                model_params[param] = config_file[
-                    "training_configs"
-                ]  # Untouched params
+            # for param in config_file["training_configs"]:
+            #     model_params[param] = config_file[
+            #         "training_configs"
+            #     ]  # Untouched params
 
             return model_params, optimizer, optimizer_params, loss_function
 
