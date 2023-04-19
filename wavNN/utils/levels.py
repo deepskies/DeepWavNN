@@ -17,6 +17,7 @@ class Levels:
 
     @staticmethod
     def find_output_size(level, in_channels, backend="pywt"):
+        level = int(level)
         sizes, levels = Levels._input_characterics(in_channels=in_channels)
         if backend == "pywt":
             sizes, levels = Levels._input_characterics(in_channels=in_channels)

@@ -9,24 +9,24 @@ class VanillaCNN(nn.Module):
         self.conv1 = nn.Conv2d(
             in_channels=1,
             out_channels=1,
-            kernel_size=kernel_size,
+            kernel_size=int(kernel_size),
             padding=1,
             stride=1,
             bias=False,
         )
         self.batch_norm_hidden = nn.BatchNorm2d(1)
-        conv1_out = math.ceil(in_channels + 2 - kernel_size + 1)
+        conv1_out = math.ceil(in_channels + 2 - int(kernel_size) + 1)
 
         self.conv2 = nn.Conv2d(
             in_channels=1,
             out_channels=1,
-            kernel_size=kernel_size,
+            kernel_size=int(kernel_size),
             padding=1,
             stride=1,
             bias=False,
         )
         self.batch_norm_out = nn.BatchNorm2d(1)
-        conv2_out = math.ceil(conv1_out + 2 - kernel_size + 1)
+        conv2_out = math.ceil(conv1_out + 2 - int(kernel_size) + 1)
 
         self.dense_out = nn.Linear(
             in_features=conv2_out**2, out_features=out_channels

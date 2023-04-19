@@ -28,13 +28,13 @@ class WavMLP(nn.Module):
 
         # Wavelet transform of input x at a level as defined by the user
         self.wav = MiniWave(
-            level=level, in_channels=in_channels, hidden_size=hidden_size
+            level=int(level), in_channels=in_channels, hidden_size=int(hidden_size)
         )
         # Flatten for when these are stacked
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
 
         # Output of those tied 3 channel layers, and the flattened concat of those
-        self.output = nn.Linear(hidden_size * 3, out_channels)
+        self.output = nn.Linear(int(hidden_size) * 3, out_channels)
 
         # Activation for a classifier
         if tail:
