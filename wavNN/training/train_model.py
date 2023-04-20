@@ -22,7 +22,6 @@ class TrainingLoop:
         loss,
         **training_configs,
     ):
-
         self.model = model_class(**model_params)
         self.data_loader = data_class()(**data_params)
 

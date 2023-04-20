@@ -101,6 +101,7 @@ class OptimizeFromConfig(Optimize):
             with open(config, "rb") as f:
                 config = json.load(f)
 
+        self.config = config
         optimizer_kwargs = self.read_config(config)
 
         super().__init__(**optimizer_kwargs)

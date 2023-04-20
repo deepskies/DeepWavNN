@@ -9,8 +9,8 @@ class VanillaMLP(nn.Module):
         super().__init__()
 
         self.flatten_input = nn.Flatten()
-        self.hidden_layer = nn.Linear(in_channels**2, hidden_size)
-        self.output_layer = nn.Linear(hidden_size, out_channels)
+        self.hidden_layer = nn.Linear(int(in_channels) ** 2, int(hidden_size))
+        self.output_layer = nn.Linear(int(hidden_size), out_channels)
 
         if tail:
             self.tail = nn.Softmax(dim=0)
