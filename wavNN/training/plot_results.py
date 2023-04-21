@@ -62,68 +62,75 @@ def plot_history(history, extra_metric_names, save_path=None):
 
 
 def plot_history_errorbar(
-    subplots,
+    subplots: list,
     histories: list,
-    extra_metrics,
+    extra_metrics: list,
+    labels: list,
+    colorway: list,
     save_path=None,
     title="",
     show=False,
-    label="",
-    color=None,
     clear=False,
 ):
+    for label, color in zip(labels, colorway):
 
-    for metric_index, metrics in enumerate(extra_metrics):
+        for metric_index, metrics in enumerate(extra_metrics):
 
-        training = [history[f"train_{metrics.__name__}"] for history in histories]
-        val = [history[f"val_{metrics.__name__}"] for history in histories]
+            training = [history[f"train_{metrics.__name__}"] for history in histories]
+            val = [history[f"val_{metrics.__name__}"] for history in histories]
 
-        mean_training = pd.DataFrame(training).mean(axis=0)
-        std_training = pd.DataFrame(training).std(axis=0)
+            mean_training = pd.DataFrame(training).mean(axis=0)
+            std_training = pd.DataFrame(training).std(axis=0)
 
-        epochs = range(len(mean_training))
+            epochs = range(len(mean_training))
 
-        mean_val = pd.DataFrame(val).mean(axis=0)
+            mean_val = pd.DataFrame(val).mean(axis=0)
 
-        subplots[metric_index].grid(
-            color="grey", linestyle="--", linewidth=0.5, alpha=0.6
-        )
+            subplots[metric_index].grid(
+                color="grey", linestyle="--", linewidth=0.5, alpha=0.6
+            )
 
-        subplots[metric_index].plot(epochs, mean_training, label=label, color=color)
-        subplots[metric_index].fill_between(
-            epochs,
-            mean_training - std_training,
-            mean_training + std_training,
-            alpha=0.3,
-            color=color,
-        )
-        subplots[metric_index].plot(epochs, mean_val, linestyle="dotted", color=color)
-        subplots[metric_index].set_ylabel(metrics.__name__)
+            subplots[metric_index].plot(epochs, mean_training, label=label, color=color)
+            subplots[metric_index].fill_between(
+                epochs,
+                mean_training - std_training,
+                mean_training + std_training,
+                alpha=0.3,
+                color=color,
+            )
+            subplots[metric_index].plot(
+                epochs, mean_val, linestyle="dotted", color=color
+            )
+            subplots[metric_index].set_ylabel(metrics.__name__)
 
-    training = [history[f"train_loss"] for history in histories]
-    val = [history[f"val_loss"] for history in histories]
+            training = [history[f"train_loss"] for history in histories]
+            val = [history[f"val_loss"] for history in histories]
 
-    mean_training = pd.DataFrame(training).mean(axis=0)
-    std_training = pd.DataFrame(training).std(axis=0)
-    mean_val = pd.DataFrame(val).mean(axis=0)
+            mean_training = pd.DataFrame(training).mean(axis=0)
+            std_training = pd.DataFrame(training).std(axis=0)
+            mean_val = pd.DataFrame(val).mean(axis=0)
 
-    epochs = range(len(mean_training))
+            epochs = range(len(mean_training))
 
-    metric_index = -1
+            metric_index = -1
 
-    subplots[metric_index].plot(epochs, mean_training, label=label, color=color)
-    subplots[metric_index].fill_between(
-        epochs,
-        mean_training - std_training,
-        mean_training + std_training,
-        alpha=0.3,
-        color=color,
-    )
-    subplots[metric_index].plot(epochs, mean_val, linestyle="dotted", color=color)
-    subplots[metric_index].set_ylabel("Loss")
-    subplots[metric_index].grid(color="grey", linestyle="--", linewidth=0.5, alpha=0.6)
+            subplots[metric_index].plot(epochs, mean_training, label=label, color=color)
+            subplots[metric_index].fill_between(
+                epochs,
+                mean_training - std_training,
+                mean_training + std_training,
+                alpha=0.3,
+                color=color,
+            )
+            subplots[metric_index].plot(
+                epochs, mean_val, linestyle="dotted", color=color
+            )
+            subplots[metric_index].set_ylabel("Loss")
+            subplots[metric_index].grid(
+                color="grey", linestyle="--", linewidth=0.5, alpha=0.6
+            )
 
-    subplots[0].set_title(title.strip("_"))
+            subplots[0].set_title(title.strip("_"))
 
     if show:
         plt.legend()
@@ -133,38 +140,60 @@ def plot_history_errorbar(
         plt.close("all")
 
     if save_path is not None:
-        plt.savefig(f"{save_path}/history_errorbar.png")
+        plt.savefig(f"{save_path}/{title}_history_errorbar.png")
 
 
 def plot_model_parameter_comparison(
-    num_params, inference_time, training_time, title, labels, colors
+    num_params,
+    inference_time,
+    training_time,
+    labels,
+    colors,
+    save_path=None,
+    title="",
+    show=False,
+    clear=False,
 ):
 
-    fig, subplots = plt.subplots(nrows=3, ncols=1, figsize=(8, 10))
+    _, subplots = plt.subplots(nrows=3, ncols=1, figsize=(6, 10))
 
     bar_x = [i + 1 for i in range(len(num_params))]
-    widths = [0.75 for _ in range(len(num_params))]
 
-    subplots[0].bar(bar_x, width=widths, height=num_params, color=colors)
-    subplots[0].set_title("Number Parameters")
+    subplots[0].barh(y=bar_x, width=num_params, color=colors)
+    subplots[0].set_xlabel("Number Parameters")
+    subplots[0].grid(color="grey", linestyle="--", linewidth=0.5, alpha=0.6)
 
-    inference_time = [np.asarray(time).mean() for time in inference_time]
-    inference_errorbar = [np.asarray(time).std() for time in inference_time]
+    for model, color, inference, training in zip(
+        labels, colors, inference_time, training_time
+    ):
+        w = 0.00005
+        subplots[1].hist(
+            inference,
+            bins=np.arange(min(inference), max(inference) + w, w),
+            label=model,
+            color=color,
+        )
+        subplots[1].set_xlabel("Mean Single Inference Time (s)")
+        subplots[1].grid(color="grey", linestyle="--", linewidth=0.5, alpha=0.6)
 
-    subplots[1].bar(bar_x, width=widths, height=inference_time, color=colors)
-    subplots[1].errorbar(bar_x, widths, yerr=inference_errorbar)
-    subplots[1].set_title("Single Inference Time (s)")
+        w = 3.0
+        subplots[2].hist(
+            training,
+            bins=np.arange(min(training), max(training) + w, w),
+            label=model,
+            color=color,
+        )
 
-    train_time = [np.asarray(time).mean() for time in training_time]
-    train_errorbar = [np.asarray(time).std() for time in training_time]
+        subplots[2].set_xlabel("Mean Full Training Time (s)")
+        subplots[2].grid(color="grey", linestyle="--", linewidth=0.5, alpha=0.6)
 
-    bar = subplots[2].bar(bar_x, width=widths, height=train_time, color=colors)
-    subplots[1].errorbar(bar_x, widths, yerr=train_errorbar)
-    subplots[2].set_title("Full Training Time (s)")
+    subplots[0].set_title(title.strip("_"))
+    if show:
+        plt.legend()
+        plt.show()
 
-    subplots[2].bar_label(bar, label_position="center", labels=labels)
+    if clear:
+        plt.close("all")
 
-    fig.legend()
-
-    plt.title(title)
-    plt.show()
+    if save_path is not None:
+        plt.savefig(f"{save_path}/{title}_history_errorbar.png")
