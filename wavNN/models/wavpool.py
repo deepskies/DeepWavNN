@@ -10,7 +10,7 @@ import math
 import numpy as np
 
 from wavNN.utils.levels import Levels
-from wavNN.models.wavelet_layer import MiniWave
+from wavNN.models.wavelet_layer import MicroWav
 
 
 class WavPool(torch.nn.Module):
@@ -47,7 +47,7 @@ class WavPool(torch.nn.Module):
         self.models = torch.nn.ModuleList()
         for level, hidden_size in zip(possible_levels, hidden_sizes):
             self.models.append(
-                MiniWave(
+                MicroWav(
                     level=int(level),
                     in_channels=in_channels,
                     hidden_size=int(hidden_size),

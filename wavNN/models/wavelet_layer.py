@@ -32,7 +32,7 @@ class WaveletLayer:
         return self.layer(x)
 
 
-class MiniWave(torch.nn.Module):
+class MicroWav(torch.nn.Module):
     def __init__(self, level: int, in_channels: int, hidden_size: int) -> None:
         super().__init__()
         self.wavelet = WaveletLayer(level=level)

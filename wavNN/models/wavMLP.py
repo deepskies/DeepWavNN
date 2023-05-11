@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from wavNN.utils.levels import Levels
-from wavNN.models.wavelet_layer import MiniWave
+from wavNN.models.wavelet_layer import MicroWav
 
 
 class WavMLP(nn.Module):
@@ -27,7 +27,7 @@ class WavMLP(nn.Module):
         assert level != 0, "Level 0 wavelet not supported"
 
         # Wavelet transform of input x at a level as defined by the user
-        self.wav = MiniWave(
+        self.wav = MicroWav(
             level=int(level), in_channels=in_channels, hidden_size=int(hidden_size)
         )
         # Flatten for when these are stacked
