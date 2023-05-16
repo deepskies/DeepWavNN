@@ -163,3 +163,71 @@ class RunExperiment:
         }
 
         self.save_results()
+
+
+if __name__ == "__main__":
+    from wavNN.training.finetune_network import OptimizeFromConfig
+
+    models_to_test = [
+        (
+            "VanillaCNN",
+            {
+                "kernel_size": (2, 4),
+                "out_channels": 10,
+                "hidden_channels_1": (1, 20),
+                "hidden_channels_2": (1, 20),
+            },
+        ),
+    ]
+    data_to_test = ["CIFARGenerator", "MNISTGenerator", "FashionMNISTGenerator"]
+    data_sizes = [32, 28, 28]
+
+    for model in models_to_test:
+        for data, data_size in zip(data_to_test, data_sizes):
+
+            model_class = models.__dict__[model[0]]
+            data_class = datagens.__dict__[data]
+
+            model[1]["in_channels"] = data_size
+            opt_config = {
+                "model": model_class,
+                "model_config": model[1],
+                "data_class": data_class,
+                "data_config": {"sample_size": [4000, 2000, 2000], "split": True},
+                "optimizer": {
+                    "id": [torch.optim.SGD, torch.optim.Adam],
+                    "lr": (0.000001, 0.8),
+                },
+                "loss": [torch.nn.CrossEntropyLoss],
+                "monitor": "val_f1",
+                "epochs": 20,
+                "n_optimizer_iters": 30,
+                "save": False,
+                "save_path": "",
+            }
+            optimizer_engine = OptimizeFromConfig(opt_config)
+            best_parms = optimizer_engine()
+
+            selection_function = optimizer_engine.build_selection_function(opt_config)
+            (
+                model_params,
+                optimizer,
+                optimizer_params,
+                _,
+            ) = selection_function(**best_parms)
+
+            optimizer = {torch.optim.SGD: "SGD", torch.optim.Adam: "Adam"}[optimizer]
+
+            model_params["in_channels"] = data_size
+            experiment_config = {
+                "model": model[0],
+                "model_kwargs": model_params,
+                "data": data,
+                "epochs": 120,
+                "save_path": "./results/optimize_params",
+                "optimizer": optimizer,
+                "optimizer_kwargs": optimizer_params,
+            }
+
+            experiment = RunExperiment(experiment_config=experiment_config)
+            experiment()
