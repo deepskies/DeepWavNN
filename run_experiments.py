@@ -1,5 +1,3 @@
-# TODO Refactor to cleo to dynamically build the config
-#
 import wavNN.models as models
 import wavNN.data_generators as datagens
 
