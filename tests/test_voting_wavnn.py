@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from wavNN.models import voting_wavMLP
+from WavPool.models import voting_wavMLP
 import torch
 
 

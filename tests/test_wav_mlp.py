@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import torch
-from wavNN.models.wavMLP import WavMLP
+from WavPool.models.wavMLP import WavMLP
 
 
 def test_mlp_out_size():

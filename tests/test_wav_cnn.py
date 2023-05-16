@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
 import torch
-from wavNN.models.wavCNN import WavCNN
+from WavPool.models.wavCNN import WavCNN
 
 
 def test_input_layer():
