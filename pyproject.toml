@@ -2,7 +2,7 @@
 name = "wavnn"
 version = "0.1.0"
 description = ""
-authors = ["voetberg <magpie127@gmail.com>"]
+authors = [""]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -10,9 +10,6 @@ torch = "^1.13.1"
 numpy = "^1.24.2"
 PyWavelets = "^1.4.1"
 argparse = "^1.4.0"
-pytest = "^7.2.1"
-pytest-cov = "^4.0.0"
-pre-commit = "^3.0.4"
 pandas = "^1.5.3"
 matplotlib = "^3.6.3"
 torchvision = "^0.14.1"
@@ -22,6 +19,9 @@ bayesian-optimization = "^1.4.2"
 torcheval = "^0.0.6"
 
 [tool.poetry.dev-dependencies]
+pytest = "^7.2.1"
+pytest-cov = "^4.0.0"
+pre-commit = "^3.0.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

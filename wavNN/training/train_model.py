@@ -32,7 +32,7 @@ class TrainingLoop:
             300 if "epochs" not in training_configs else training_configs["epochs"]
         )
         self.early_stopping_tolerence = (
-            3
+            5
             if "early_stopping_tolerence" not in training_configs
             else training_configs["early_stopping_tolerence"]
         )
