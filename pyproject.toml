@@ -1,17 +1,20 @@
 [tool.poetry]
-name = "wavnn"
-version = "0.1.0"
-description = ""
-authors = [""]
+name = "WavPool"
+version = "0.1.1"
+description = "A network block with built in spacial and scale decomposition."
+authors = ["M. Voetberg <maggiev@fnal.gov>"]
+readme = "README.md"
+license = "mit"
+homepage = "https://github.com/deepskies/DeepWavNN"
+repository = "https://github.com/deepskies/DeepWavNN"
+
 
 [tool.poetry.dependencies]
 python = "^3.10"
 torch = "^1.13.1"
 numpy = "^1.24.2"
 PyWavelets = "^1.4.1"
-argparse = "^1.4.0"
 pandas = "^1.5.3"
-matplotlib = "^3.6.3"
 torchvision = "^0.14.1"
 jupyter = "^1.0.0"
 kymatio = "^0.3.0"
