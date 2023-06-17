@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![PyPI version](https://img.shields.io/pypi/v/wavpool)](https://pypi.org/project/wavpool/)
-[![arXiv](https://img.shields.io/badge/arXiv-1234.56789-b31b1b.svg)](https://arxiv.org/abs/1234.56789)
+[![arXiv](https://img.shields.io/badge/arXiv-2306.08734-b31b1b.svg)](https://arxiv.org/abs/2306.08734)
 
 # WavPool
 
@@ -84,3 +84,15 @@ This manuscript has been authored by Fermi Research Alliance, LLC under Contract
 `FERMILAB-CONF-23-278-CSAID`
 
 ### Citation
+If you use our work or our code, we request you cite the arxiv paper! 
+
+```
+@misc{mcdermott2023wavpool,
+      title={WavPool: A New Block for Deep Neural Networks}, 
+      author={Samuel D. McDermott and M. Voetberg and Brian Nord},
+      year={2023},
+      eprint={2306.08734},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
