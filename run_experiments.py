@@ -1,8 +1,8 @@
-import wavNN.models as models
-import wavNN.data_generators as datagens
+import wavpool.models as models
+import wavpool.data_generators as datagens
 
-from wavNN.training.train_model import TrainingLoop
-from wavNN.training.training_metrics import TrainingMetrics
+from wavpool.training.train_model import TrainingLoop
+from wavpool.training.training_metrics import TrainingMetrics
 
 import torch
 import datetime

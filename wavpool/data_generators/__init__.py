@@ -1,0 +1,3 @@
+from wavpool.data_generators.cifar_generator import CIFARGenerator
+from wavpool.data_generators.mnist_generator import MNISTGenerator
+from wavpool.data_generators.fashion_mnist_generator import FashionMNISTGenerator
